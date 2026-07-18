@@ -6,6 +6,8 @@
 <title>ta-rod · Tarot · Astrología · Chamanismo</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#07071A">
 :root{
   --abyss:#07071A;--dp:#120A2E;--gold:#C9A84C;--gl:#E8D5A3;--gd:#7A6230;
   --tp:#E8D5A3;--ts:#9A8A6A;--tm:#5A5070;
@@ -2290,6 +2292,13 @@ function setupReveal(){
   document.querySelectorAll('.rv').forEach(el=>{if(el.getBoundingClientRect().top<innerHeight)el.classList.add('on');else obs.observe(el)});
 }
 setupReveal();
+</script>
+  <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js');
+  });
+}
 </script>
 </body>
 </html>
