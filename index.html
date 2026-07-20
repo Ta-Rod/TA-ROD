@@ -2036,7 +2036,7 @@ function updateInfo(){const t=TIRADAS[tiradaActiva];$('t-info').innerHTML='<em>'
 function renderDeck(){
   const dp=$('deck-picker');dp.innerHTML='';
   mazo.forEach(card=>{
-    const d=document.createElement('div');d.className='dmc';d.id='dmc-'+card.id;d.title=card.n+' · '+card.k;
+    const d=document.createElement('div');d.className='dmc';d.id='dmc-'+card.id;
     d.innerHTML='<div class="dmc-inner"><div class="dface dback">'+BACK_SVG+'</div><div class="dface dfront">'+rwsImg(card.id,'width:100%;flex:1;min-height:0;')+'<div class="dfront-label">'+card.n+'</div></div></div>';
     d.onclick=()=>toggleCard(card,d);
     dp.appendChild(d);
