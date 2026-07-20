@@ -1840,7 +1840,7 @@ function drawCh(){
   chX.beginPath();chX.moveTo(135,88);chX.lineTo(135,468);chX.strokeStyle=cg;chX.lineWidth=1.8;chX.stroke();
   // Chakras
   chPos.forEach((y,i)=>{
-    const idx=6-i,col=chColors[idx];
+    const idx=i,col=chColors[idx];
     const isActive=chActive===idx,isHover=chHover===idx;
     const pr=isActive?18+4*Math.sin(Date.now()*.005):isHover?15:11;
     // Aura exterior
@@ -1868,7 +1868,7 @@ chC.addEventListener('mousemove',e=>{
   const my=e.clientY-rect.top;
   const mx=e.clientX-rect.left;
   let found=-1;
-  chPos.forEach((y,i)=>{const idx=6-i;const dist=Math.sqrt((mx-135)**2+(my-y)**2);if(dist<22)found=idx});
+  chPos.forEach((y,i)=>{const idx=i;const dist=Math.sqrt((mx-135)**2+(my-y)**2);if(dist<22)found=idx});
   const lbl=$('ch-hover-lbl');
   if(found>=0){
     chHover=found;
@@ -1884,7 +1884,7 @@ chC.addEventListener('mouseleave',()=>{chHover=null;$('ch-hover-lbl').classList.
 chC.addEventListener('click',e=>{
   const rect=chC.getBoundingClientRect();
   const my=e.clientY-rect.top,mx=e.clientX-rect.left;
-  chPos.forEach((y,i)=>{const idx=6-i;const dist=Math.sqrt((mx-135)**2+(my-y)**2);if(dist<22)openChakra(idx)});
+  chPos.forEach((y,i)=>{const idx=i;const dist=Math.sqrt((mx-135)**2+(my-y)**2);if(dist<22)openChakra(idx)});
 });
 
 // ── Apertura de panel de detalle ──
