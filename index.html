@@ -2241,11 +2241,13 @@ function burnIt(){const txt=$('altar-txt').value.trim();if(!txt)return;fOn=true;
 // MODAL AGENDAR
 // ═══════════════════════════════════════
 // --- Notificaciones de reserva ---
-// 1) Email vía FormSubmit (https://formsubmit.co) — no requiere cuenta ni API
-//    key, solo un correo de destino. La PRIMERA vez que llegue una reserva,
-//    FormSubmit le manda un correo de confirmación a BOOKING_NOTIFY_EMAIL
-//    pidiendo hacer click en "Activate Form"; una vez activado, todas las
-//    reservas futuras se envían automáticamente sin ningún paso extra.
+// 1) Email vía Google Apps Script: el correo sale literalmente desde tu
+//    propia cuenta de Gmail (no un tercero como FormSubmit, que no estaba
+//    entregando nada). Requiere desplegar un pequeño script una sola vez —
+//    ver /email-relay/README.md para el paso a paso (5 minutos, gratis).
+//    Pega aquí la URL que te da Google al desplegarlo. Vacío = desactivado
+//    (la reserva se sigue completando, solo no se manda el correo).
+const APPS_SCRIPT_EMAIL_URL='';
 const BOOKING_NOTIFY_EMAIL='tatitarodcr@gmail.com';
 // 2) WhatsApp: se abre automáticamente un chat de WhatsApp Web/App hacia este
 //    número con los datos de la reserva ya escritos — el cliente solo tiene
@@ -2301,25 +2303,18 @@ function openModal(svc){
   initCal();
 }
 function closeModal(){$('modal-ov').classList.remove('on');document.body.style.overflow=''}
-// Envía el formulario a FormSubmit navegando de verdad a su endpoint (sin
-// iframe ni fetch/AJAX) — el método más simple y confiable que ellos
-// documentan, y el único que además nos deja VER en pantalla si algo falla
-// (por ejemplo, si el correo todavía no está activado, FormSubmit muestra su
-// propia página pidiendo la activación en vez de fallar en silencio).
-// _next hace que, una vez enviado, vuelva a esta misma página.
-function sendBookingEmail(email,data){
-  const nextUrl=location.origin+location.pathname+'?reserva=ok';
-  const form=document.createElement('form');
-  form.action='https://formsubmit.co/'+encodeURIComponent(email);
-  form.method='POST';
-  const fields=Object.assign({},data,{_next:nextUrl});
-  Object.keys(fields).forEach(k=>{
-    const input=document.createElement('input');
-    input.type='hidden';input.name=k;input.value=fields[k];
-    form.appendChild(input);
-  });
-  document.body.appendChild(form);
-  form.submit();
+// Envía la reserva al script de Google Apps Script (ver /email-relay), que
+// manda el correo desde tu propia cuenta de Gmail. 'text/plain' evita el
+// preflight CORS que Apps Script no maneja bien; Apps Script igual lee el
+// JSON del cuerpo sin problema. Devuelve true/false según si de verdad se
+// pudo enviar (a diferencia del método anterior, aquí sí se puede confirmar).
+async function sendBookingEmail(data){
+  if(!APPS_SCRIPT_EMAIL_URL)return false;
+  try{
+    const resp=await fetch(APPS_SCRIPT_EMAIL_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(data)});
+    const json=await resp.json().catch(()=>null);
+    return!!(json&&json.ok);
+  }catch(e){console.error('Error enviando la reserva por correo:',e);return false}
 }
 async function confirmBook(){
   const nombre=($('m-nombre')||{}).value||'';
@@ -2333,7 +2328,7 @@ async function confirmBook(){
   const [y,m,d]=calSelectedDate.split('-');
   const dayName=CAL_DAYS[new Date(calSelectedDate+'T12:00:00').getDay()];
   const fechaHora=dayName+' '+parseInt(d)+' de '+CAL_MONTHS[parseInt(m)-1]+' '+y+' · '+calSelectedSlot;
-  const bookingData={Nombre:nombre,Correo:email,WhatsApp:wa||'No indicado','Tipo de sesión':tipoSesion||'No indicado',Modalidad:modalidad||'No indicada','Fecha y hora':fechaHora,_subject:'✦ Nueva reserva en TA-ROD — '+nombre,_template:'table',_captcha:'false'};
+  const bookingData={Nombre:nombre,Correo:email,WhatsApp:wa||'No indicado','Tipo de sesión':tipoSesion||'No indicado',Modalidad:modalidad||'No indicada','Fecha y hora':fechaHora};
   const waText='✦ Nueva reserva en TA-ROD ✦\n\nNombre: '+nombre+'\nCorreo: '+email+'\nWhatsApp: '+(wa||'No indicado')+'\nTipo de sesión: '+(tipoSesion||'No indicado')+'\nModalidad: '+(modalidad||'No indicada')+'\nFecha y hora: '+fechaHora;
 
   // Se abre en blanco de inmediato (dentro del mismo click) para que el
@@ -2362,9 +2357,16 @@ async function confirmBook(){
     fetch(WHATSAPP_NOTIFY_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bookingData)}).catch(()=>{});
   }
 
-  // Esto navega la página a FormSubmit y, si todo está activado, vuelve
-  // aquí mismo (?reserva=ok) — ver checkBookingConfirmed() más abajo.
-  sendBookingEmail(BOOKING_NOTIFY_EMAIL,bookingData);
+  const emailOk=await sendBookingEmail(bookingData);
+
+  if(btn){btn.disabled=false;btn.textContent='✦ Confirmar mi Reserva ✦'}
+
+  const msg=emailOk
+    ?'✦ Reserva recibida ✦\n\nNombre: '+nombre+'\nFecha: '+fechaHora+'\n\nEn breve recibirás confirmación.\n\nSi no se abrió WhatsApp automáticamente, puedes contactarnos al 📞 +(506) 8821-5669'
+    :'✦ Reserva recibida ✦\n\nNombre: '+nombre+'\nFecha: '+fechaHora+'\n\nTe abrimos un chat de WhatsApp para confirmar tu reserva ahí mismo. Por favor dale "Enviar" al mensaje que te dejamos escrito.';
+  closeModal();
+  resetBookingForm();
+  setTimeout(()=>alert(msg),300);
 }
 function resetBookingForm(){
   if($('m-nombre'))$('m-nombre').value='';
@@ -2741,13 +2743,6 @@ function setupReveal(){
   document.querySelectorAll('.rv').forEach(el=>{if(el.getBoundingClientRect().top<innerHeight)el.classList.add('on');else obs.observe(el)});
 }
 setupReveal();
-
-// Al volver de FormSubmit tras una reserva exitosa (ver sendBookingEmail).
-(function checkBookingConfirmed(){
-  if(location.search.indexOf('reserva=ok')===-1)return;
-  history.replaceState(null,'',location.pathname);
-  setTimeout(()=>alert('✦ Reserva recibida ✦\n\nGracias, tu solicitud se envió correctamente. En breve recibirás confirmación.\n\nSi no se abrió WhatsApp automáticamente, puedes contactarnos al 📞 +(506) 8821-5669'),300);
-})();
 </script>
   <script>
 if ('serviceWorker' in navigator) {
