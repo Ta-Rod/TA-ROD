@@ -1054,7 +1054,6 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
 'use strict';
 // ═══════════════════════════════════════
@@ -2132,24 +2131,21 @@ function burnIt(){const txt=$('altar-txt').value.trim();if(!txt)return;fOn=true;
 // MODAL AGENDAR
 // ═══════════════════════════════════════
 // --- Notificaciones de reserva ---
-// 1) Email vía EmailJS (https://www.emailjs.com — plan gratuito, sin backend).
-//    Crea una cuenta, un "Email Service" y un "Email Template", y reemplaza
-//    los 3 valores de abajo con los tuyos. El template debe usar estas
-//    variables: {{from_name}}, {{from_email}}, {{whatsapp}}, {{tipo_sesion}},
-//    {{modalidad}}, {{fecha_hora}}, {{to_email}}. Configura el campo "To Email"
-//    del template como {{to_email}} (o directamente tatitarodcr@gmail.com).
-const EMAILJS_PUBLIC_KEY='TU_PUBLIC_KEY';
-const EMAILJS_SERVICE_ID='TU_SERVICE_ID';
-const EMAILJS_TEMPLATE_ID='TU_TEMPLATE_ID';
+// 1) Email vía FormSubmit (https://formsubmit.co) — no requiere cuenta ni API
+//    key, solo un correo de destino. La PRIMERA vez que llegue una reserva,
+//    FormSubmit le manda un correo de confirmación a BOOKING_NOTIFY_EMAIL
+//    pidiendo hacer click en "Activate Form"; una vez activado, todas las
+//    reservas futuras se envían automáticamente sin ningún paso extra.
 const BOOKING_NOTIFY_EMAIL='tatitarodcr@gmail.com';
-// 2) WhatsApp: requiere un backend propio (no se puede llamar a Twilio/Meta
-//    directamente desde el navegador sin exponer credenciales). Deja vacío
-//    ('') para desactivar, o pon aquí la URL de la función serverless de
-//    /api/notify-whatsapp.js una vez la despliegues (ver README de esa carpeta).
+// 2) WhatsApp: se abre automáticamente un chat de WhatsApp Web/App hacia este
+//    número con los datos de la reserva ya escritos — el cliente solo tiene
+//    que darle "Enviar". No requiere backend ni credenciales.
+const OWNER_WHATSAPP='50688215669';
+// 3) (Opcional/avanzado) Si además quieres que el mensaje de WhatsApp se
+//    envíe 100% automático sin que el cliente tenga que darle "Enviar",
+//    necesitas un backend con Twilio (ver api/README.md) y pegar aquí la URL
+//    de esa función una vez desplegada. Vacío = desactivado.
 const WHATSAPP_NOTIFY_ENDPOINT='';
-if(typeof emailjs!=='undefined'&&EMAILJS_PUBLIC_KEY&&EMAILJS_PUBLIC_KEY!=='TU_PUBLIC_KEY'){
-  emailjs.init({publicKey:EMAILJS_PUBLIC_KEY});
-}
 function openModal(svc){
   const labels={carta:['Carta Natal + Tarot','Lectura profunda de tu mapa estelar y los arquetipos'],pend:['Alineación con Péndulo','Diagnóstico y reequilibrio de tu campo energético'],limpieza:['Limpieza Chamánica','Ritual sagrado de transmutación y apertura de caminos']};
   const l=labels[svc]||['Agendar Sesión','Completa tus datos para reservar tu espacio sagrado'];
@@ -2172,31 +2168,37 @@ async function confirmBook(){
   const [y,m,d]=calSelectedDate.split('-');
   const dayName=CAL_DAYS[new Date(calSelectedDate+'T12:00:00').getDay()];
   const fechaHora=dayName+' '+parseInt(d)+' de '+CAL_MONTHS[parseInt(m)-1]+' '+y+' · '+calSelectedSlot;
-  const bookingData={from_name:nombre,from_email:email,whatsapp:wa,tipo_sesion:tipoSesion,modalidad:modalidad,fecha_hora:fechaHora,to_email:BOOKING_NOTIFY_EMAIL};
+  const bookingData={Nombre:nombre,Correo:email,WhatsApp:wa||'No indicado','Tipo de sesión':tipoSesion||'No indicado',Modalidad:modalidad||'No indicada','Fecha y hora':fechaHora,_subject:'✦ Nueva reserva en TA-ROD — '+nombre,_template:'table',_captcha:'false'};
+  const waText='✦ Nueva reserva en TA-ROD ✦\n\nNombre: '+nombre+'\nCorreo: '+email+'\nWhatsApp: '+(wa||'No indicado')+'\nTipo de sesión: '+(tipoSesion||'No indicado')+'\nModalidad: '+(modalidad||'No indicada')+'\nFecha y hora: '+fechaHora;
+
+  // Se abre de inmediato (dentro del mismo click) para que el navegador no lo bloquee como pop-up.
+  window.open('https://wa.me/'+OWNER_WHATSAPP+'?text='+encodeURIComponent(waText),'_blank');
 
   const btn=document.querySelector('.modal-submit');
   if(btn){btn.disabled=true;btn.textContent='Enviando...'}
 
   let emailOk=true;
-  if(typeof emailjs!=='undefined'&&EMAILJS_PUBLIC_KEY&&EMAILJS_PUBLIC_KEY!=='TU_PUBLIC_KEY'){
-    try{
-      await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,bookingData);
-    }catch(e){emailOk=false}
-  }
+  try{
+    const resp=await fetch('https://formsubmit.co/ajax/'+encodeURIComponent(BOOKING_NOTIFY_EMAIL),{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify(bookingData)
+    });
+    if(!resp.ok)emailOk=false;
+  }catch(e){emailOk=false}
+
   if(WHATSAPP_NOTIFY_ENDPOINT){
     fetch(WHATSAPP_NOTIFY_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bookingData)}).catch(()=>{});
   }
 
   if(btn){btn.disabled=false;btn.textContent='✦ Confirmar mi Reserva ✦'}
 
-  if(emailOk){
-    const msg='✦ Reserva recibida ✦\n\nNombre: '+nombre+'\nFecha: '+fechaHora+'\n\nEn breve recibirás confirmación.\n\nPuedes contactarnos al 📞 8821-5669';
-    closeModal();
-    resetBookingForm();
-    setTimeout(()=>alert(msg),300);
-  }else{
-    alert('No pudimos enviar tu reserva automáticamente. Por favor contáctanos directamente al 📞 8821-5669 o vuelve a intentarlo.');
-  }
+  const msg=emailOk
+    ?'✦ Reserva recibida ✦\n\nNombre: '+nombre+'\nFecha: '+fechaHora+'\n\nEn breve recibirás confirmación.\n\nSi no se abrió WhatsApp automáticamente, puedes contactarnos al 📞 8821-5669'
+    :'✦ Reserva recibida ✦\n\nNombre: '+nombre+'\nFecha: '+fechaHora+'\n\nTe abrimos un chat de WhatsApp para confirmar tu reserva ahí mismo. Por favor dale "Enviar" al mensaje que te dejamos escrito.';
+  closeModal();
+  resetBookingForm();
+  setTimeout(()=>alert(msg),300);
 }
 function resetBookingForm(){
   if($('m-nombre'))$('m-nombre').value='';
