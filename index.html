@@ -2036,6 +2036,10 @@ function activChakra(i){openChakra(i)}
 // ═══════════════════════════════════════
 const RWS='https://raw.githubusercontent.com/seven102161/elaine-tarot-cards/main/cards/';
 const RWS_MAP={0:'ar00.jpg',1:'ar01.jpg',2:'ar02.jpg',3:'ar03.jpg',4:'ar04.jpg',5:'ar05.jpg',6:'ar06.jpg',7:'ar07.jpg',8:'ar08.jpg',9:'ar09.jpg',10:'ar10.jpg',11:'ar11.jpg',12:'ar12.jpg',13:'ar13.jpg',14:'ar14.jpg',15:'ar15.jpg',16:'ar16.jpg',17:'ar17.jpg',18:'ar18.jpg',19:'ar19.jpg',20:'ar20.jpg',21:'ar21.jpg',22:'waac.jpg',23:'wa02.jpg',24:'wa03.jpg',25:'wa04.jpg',26:'wa05.jpg',27:'wa06.jpg',28:'wa07.jpg',29:'wa08.jpg',30:'wa09.jpg',31:'wa10.jpg',32:'wapa.jpg',33:'wakn.jpg',34:'waqu.jpg',35:'waki.jpg',36:'cuac.jpg',37:'cu02.jpg',38:'cu03.jpg',39:'cu04.jpg',40:'cu05.jpg',41:'cu06.jpg',42:'cu07.jpg',43:'cu08.jpg',44:'cu09.jpg',45:'cu10.jpg',46:'cupa.jpg',47:'cukn.jpg',48:'cuqu.jpg',49:'cuki.jpg',50:'swac.jpg',51:'sw02.jpg',52:'sw03.jpg',53:'sw04.jpg',54:'sw05.jpg',55:'sw06.jpg',56:'sw07.jpg',57:'sw08.jpg',58:'sw09.jpg',59:'sw10.jpg',60:'swpa.jpg',61:'swkn.jpg',62:'swqu.jpg',63:'swki.jpg',64:'peac.jpg',65:'pe02.jpg',66:'pe03.jpg',67:'pe04.jpg',68:'pe05.jpg',69:'pe06.jpg',70:'pe07.jpg',71:'pe08.jpg',72:'pe09.jpg',73:'pe10.jpg',74:'pepa.jpg',75:'pekn.jpg',76:'pequ.jpg',77:'peki.jpg'};
+// El repo externo tiene 9 archivos mal etiquetados (ases/cortes de espadas y cortes de oros
+// muestran arte de bastos u otras cartas). Se sirven localmente con la imagen RWS correcta.
+const RWS_FIX={50:'images/rws-fix/swac.png',60:'images/rws-fix/swpa.png',61:'images/rws-fix/swkn.png',62:'images/rws-fix/swqu.png',63:'images/rws-fix/swki.png',74:'images/rws-fix/pepa.png',75:'images/rws-fix/pekn.png',76:'images/rws-fix/pequ.png',77:'images/rws-fix/peki.png'};
+function cardImgUrl(id){return RWS_FIX[id]||(RWS+RWS_MAP[id]);}
 const DECK=[
   {id:0,n:'El Loco',g:'🃏',t:'mayor',p:'',k:'Libertad'},{id:1,n:'El Mago',g:'🎩',t:'mayor',p:'',k:'Voluntad'},{id:2,n:'La Papisa',g:'📖',t:'mayor',p:'',k:'Sabiduría'},{id:3,n:'La Emperatriz',g:'👑',t:'mayor',p:'',k:'Abundancia'},{id:4,n:'El Emperador',g:'⚔️',t:'mayor',p:'',k:'Poder'},{id:5,n:'El Papa',g:'✝️',t:'mayor',p:'',k:'Tradición'},{id:6,n:'El Enamorado',g:'💘',t:'mayor',p:'',k:'Elección'},{id:7,n:'El Carro',g:'🏆',t:'mayor',p:'',k:'Triunfo'},{id:8,n:'La Justicia',g:'⚖️',t:'mayor',p:'',k:'Equilibrio'},{id:9,n:'El Ermitaño',g:'🏮',t:'mayor',p:'',k:'Soledad'},{id:10,n:'La Rueda',g:'☸️',t:'mayor',p:'',k:'Ciclos'},{id:11,n:'La Fuerza',g:'🦁',t:'mayor',p:'',k:'Poder suave'},{id:12,n:'El Colgado',g:'🙃',t:'mayor',p:'',k:'Rendición'},{id:13,n:'La Muerte',g:'💀',t:'mayor',p:'',k:'Transformación'},{id:14,n:'La Templanza',g:'🏺',t:'mayor',p:'',k:'Alquimia'},{id:15,n:'El Diablo',g:'😈',t:'mayor',p:'',k:'Sombra'},{id:16,n:'La Torre',g:'🗼',t:'mayor',p:'',k:'Revelación'},{id:17,n:'La Estrella',g:'⭐',t:'mayor',p:'',k:'Esperanza'},{id:18,n:'La Luna',g:'🌕',t:'mayor',p:'',k:'Ilusión'},{id:19,n:'El Sol',g:'☀️',t:'mayor',p:'',k:'Claridad'},{id:20,n:'El Juicio',g:'📯',t:'mayor',p:'',k:'Llamado'},{id:21,n:'El Mundo',g:'🌍',t:'mayor',p:'',k:'Totalidad'},
   {id:22,n:'As de Bastos',g:'🪄',t:'menor',p:'bastos',k:'Inicio'},{id:23,n:'Dos de Bastos',g:'🔥',t:'menor',p:'bastos',k:'Visión'},{id:24,n:'Tres de Bastos',g:'🌟',t:'menor',p:'bastos',k:'Expansión'},{id:25,n:'Cuatro de Bastos',g:'🎊',t:'menor',p:'bastos',k:'Celebración'},{id:26,n:'Cinco de Bastos',g:'⚡',t:'menor',p:'bastos',k:'Conflicto'},{id:27,n:'Seis de Bastos',g:'🏅',t:'menor',p:'bastos',k:'Victoria'},{id:28,n:'Siete de Bastos',g:'🥊',t:'menor',p:'bastos',k:'Defensa'},{id:29,n:'Ocho de Bastos',g:'💨',t:'menor',p:'bastos',k:'Velocidad'},{id:30,n:'Nueve de Bastos',g:'🎯',t:'menor',p:'bastos',k:'Resistencia'},{id:31,n:'Diez de Bastos',g:'😓',t:'menor',p:'bastos',k:'Carga'},{id:32,n:'Paje de Bastos',g:'🧒',t:'menor',p:'bastos',k:'Mensajero'},{id:33,n:'Caballo de Bastos',g:'🏇',t:'menor',p:'bastos',k:'Ímpetu'},{id:34,n:'Reina de Bastos',g:'👸',t:'menor',p:'bastos',k:'Carisma'},{id:35,n:'Rey de Bastos',g:'🤴',t:'menor',p:'bastos',k:'Liderazgo'},
@@ -2055,7 +2059,7 @@ function shuffle(arr){return arr.slice().sort(()=>Math.random()-.5)}
 
 let tiradaActiva='unica',selCards=[],mazo=shuffle([...DECK]);
 const BACK_SVG=`<svg viewBox="0 0 65 96" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="65" height="96" fill="#120830"/><rect x="3" y="3" width="59" height="90" fill="none" stroke="rgba(201,168,76,.38)" stroke-width=".8"/><rect x="6" y="6" width="53" height="84" fill="none" stroke="rgba(201,168,76,.18)" stroke-width=".5"/><polygon points="32.5,11 39,28 56,28 43,38 48,54 32.5,44 17,54 22,38 9,28 26,28" fill="none" stroke="rgba(201,168,76,.32)" stroke-width=".8"/><circle cx="32.5" cy="48" r="18" fill="none" stroke="rgba(201,168,76,.13)" stroke-width=".5" stroke-dasharray="2,2"/><text x="32.5" y="51" text-anchor="middle" font-size="7" fill="rgba(201,168,76,.45)" font-family="serif">✦</text><text x="32.5" y="86" text-anchor="middle" font-size="4.5" fill="rgba(201,168,76,.28)" font-family="serif" letter-spacing="1">TA·ROD</text></svg>`;
-function rwsImg(id,styles){const fn=RWS_MAP[id];if(!fn)return'<div style="'+styles+'font-size:1.5rem;display:flex;align-items:center;justify-content:center;background:#1A0A30">'+DECK[id].g+'</div>';return'<img src="'+RWS+fn+'" style="'+styles+'object-fit:cover;display:block" loading="lazy" onerror="this.style.display=\'none\'">';}
+function rwsImg(id,styles){const fn=RWS_MAP[id];if(!fn)return'<div style="'+styles+'font-size:1.5rem;display:flex;align-items:center;justify-content:center;background:#1A0A30">'+DECK[id].g+'</div>';return'<img src="'+cardImgUrl(id)+'" style="'+styles+'object-fit:cover;display:block" loading="lazy" onerror="this.style.display=\'none\'">';}
 function selTirada(k,btn){
   tiradaActiva=k;
   document.querySelectorAll('.t-btn').forEach(b=>b.classList.remove('on'));
@@ -2292,7 +2296,7 @@ function renderArc(list,hidden){
   list.forEach((a,i)=>{
     // Índice original en ARCANOS_DATA para imagen correcta
     const origIdx=ARCANOS_DATA.indexOf(a);
-    const imgUrl=RWS+RWS_MAP[origIdx];
+    const imgUrl=cardImgUrl(origIdx);
     const card=document.createElement('div');
     card.className='arc-card'+(hidden?' arc-card-hidden':'');
     card.innerHTML='<div class="arc-img-wrap"><img src="'+imgUrl+'" alt="'+a.n+'" loading="lazy" onerror="this.style.display=\'none\'"><div class="arc-num">'+a.num+'</div><div class="arc-overlay"><p class="arc-kw">'+a.k+'</p><span class="arc-hint">Ver interpretación</span></div></div><div class="arc-info"><span class="arc-name">'+a.n+'</span><span class="arc-elem">'+a.eb+'</span></div>';
@@ -2325,7 +2329,7 @@ function resetArc(){
   renderArc(getFilteredArc(),false);
 }
 function openArcModal(a,i){
-  $('am-art').innerHTML='<div class="am-card-img"><img src="'+RWS+RWS_MAP[i]+'" alt="'+a.n+'" onerror="this.style.display=\'none\'"></div><span class="am-num">'+a.num+' · Arcano '+a.num+'</span>';
+  $('am-art').innerHTML='<div class="am-card-img"><img src="'+cardImgUrl(i)+'" alt="'+a.n+'" onerror="this.style.display=\'none\'"></div><span class="am-num">'+a.num+' · Arcano '+a.num+'</span>';
   $('am-title').textContent=a.n;$('am-kw').textContent=a.k;
   $('am-badges').innerHTML='<span class="am-badge">'+a.eb+'</span><span class="am-badge">'+a.pb+'</span><span class="am-badge">'+a.sig+'</span>';
   $('am-marseille').textContent=a.marseille;$('am-chamanico').textContent=a.chamanico;$('am-tirada').textContent=a.tirada;
@@ -2398,7 +2402,7 @@ function renderArm(list,hidden){
   const grid=$('arm-grid');grid.innerHTML='';
   $('arm-count').textContent=list.length;
   list.forEach(a=>{
-    const imgUrl=RWS+RWS_MAP[a.id];
+    const imgUrl=cardImgUrl(a.id);
     const card=document.createElement('div');
     card.className='arc-card'+(hidden?' arc-card-hidden':'');
     card.innerHTML='<div class="arc-img-wrap"><img src="'+imgUrl+'" alt="'+a.n+'" loading="lazy" onerror="this.style.display=\'none\'"><div class="arc-num">'+a.num+'</div><div class="arc-overlay"><p class="arc-kw">'+a.k+'</p><span class="arc-hint">Ver interpretación</span></div></div><div class="arc-info"><span class="arc-name">'+a.n+'</span><span class="arc-elem">'+a.eb+'</span></div>';
@@ -2431,7 +2435,7 @@ function resetArm(){
 }
 function openArmModal(a){
   const paloCap=a.palo.charAt(0).toUpperCase()+a.palo.slice(1);
-  $('amm-art').innerHTML='<div class="am-card-img"><img src="'+RWS+RWS_MAP[a.id]+'" alt="'+a.n+'" onerror="this.style.display=\'none\'"></div><span class="am-num">'+a.num+' de '+paloCap+'</span>';
+  $('amm-art').innerHTML='<div class="am-card-img"><img src="'+cardImgUrl(a.id)+'" alt="'+a.n+'" onerror="this.style.display=\'none\'"></div><span class="am-num">'+a.num+' de '+paloCap+'</span>';
   $('amm-title').textContent=a.n;$('amm-kw').textContent=a.k;
   $('amm-badges').innerHTML='<span class="am-badge">'+a.eb+'</span><span class="am-badge">'+a.sig+'</span>';
   $('amm-tradicional').textContent=a.tradicional;$('amm-chamanico').textContent=a.chamanico;$('amm-tirada').textContent=a.tirada;
