@@ -501,6 +501,38 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
   .info-grid{grid-template-columns:1fr}
   .tab-btn{font-size:.58rem;padding:.65rem 1.1rem}
 }
+/* QUIZ: ANIMAL DE PODER */
+.pq-wrap{max-width:700px;margin:2.6rem auto 0;text-align:center}
+.pq-intro-lbl{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gd);margin-bottom:.6rem}
+.pq-intro h4{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gl);margin-bottom:.7rem;font-weight:400}
+.pq-intro p{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--ts);font-size:.95rem;line-height:1.6;margin-bottom:.4rem}
+.pq-quiz{display:none;text-align:left}
+.pq-quiz.show{display:block;animation:chDetailIn .4s ease}
+.pq-progress{width:100%;height:2px;background:var(--br);margin-bottom:1rem;overflow:hidden}
+.pq-progress-bar{height:100%;background:linear-gradient(90deg,var(--gd),var(--gold));width:0;transition:width .4s ease}
+.pq-step-lbl{text-align:center;font-size:.56rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gd);margin-bottom:1.3rem}
+.pq-question{font-family:'Playfair Display',serif;font-size:1.15rem;color:var(--gl);text-align:center;margin-bottom:1.7rem;line-height:1.45}
+.pq-options{display:flex;flex-direction:column;gap:.7rem}
+.pq-option-btn{display:flex;align-items:flex-start;gap:.9rem;width:100%;text-align:left;padding:.9rem 1.1rem;border:1px solid var(--br);background:rgba(201,168,76,.02);color:var(--tp);font-family:'Cormorant Garamond',serif;font-size:.92rem;font-style:italic;line-height:1.55;cursor:pointer;transition:all .3s}
+.pq-option-btn:hover{border-color:var(--bb);background:rgba(201,168,76,.06)}
+.pq-opt-letter{flex-shrink:0;width:22px;height:22px;border:1px solid var(--gd);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;font-style:normal;font-size:.62rem;color:var(--gold);margin-top:.1rem}
+.pq-result{display:none;text-align:center}
+.pq-result.show{display:block;animation:chDetailIn .5s ease}
+.pq-result-icon{font-size:3rem;margin-bottom:.6rem}
+.pq-result-lbl{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gd);margin-bottom:.4rem}
+.pq-result-name{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--gl);margin-bottom:.3rem}
+.pq-result-elem{font-size:.66rem;letter-spacing:.15em;text-transform:uppercase;color:var(--ts);margin-bottom:1.2rem}
+.pq-result-teaser{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--tp);font-size:1.02rem;line-height:1.7;max-width:560px;margin:0 auto}
+.pq-locked{position:relative;margin:1.7rem auto 0;padding:1.3rem 1.5rem;border:1px solid var(--br);background:rgba(201,168,76,.02);overflow:hidden;text-align:left;max-width:560px;min-height:120px}
+.pq-locked-text{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--tp);font-size:.92rem;line-height:1.7;filter:blur(5px);user-select:none}
+.pq-locked-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;background:linear-gradient(180deg,rgba(7,7,26,.35),rgba(7,7,26,.92));padding:1rem}
+.pq-locked-overlay span{font-size:1.4rem}
+.pq-locked-overlay p{font-size:.68rem;color:var(--ts);max-width:320px;line-height:1.55;font-family:'Inter',sans-serif;text-align:center;letter-spacing:.01em}
+.pq-unlock-btn{display:inline-block;margin-top:1.7rem;padding:.9rem 2.2rem;background:linear-gradient(135deg,rgba(37,211,102,.18),rgba(37,211,102,.06));border:1px solid #25D366;color:#8FE8B0;font-family:'Inter',sans-serif;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;text-decoration:none;transition:all .35s}
+.pq-unlock-btn:hover{box-shadow:0 0 22px rgba(37,211,102,.28)}
+.pq-restart-btn{display:block;margin:1.1rem auto 0;background:transparent;border:none;color:var(--tm);font-family:'Inter',sans-serif;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:color .3s}
+.pq-restart-btn:hover{color:var(--gold)}
+@media(max-width:600px){.pq-result-name{font-size:1.4rem}.pq-question{font-size:1rem}.pq-option-btn{font-size:.85rem}}
 </style>
 
 </head>
@@ -742,6 +774,23 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
       <div class="ig-item"><h4>🐻 Oso</h4><p>Fuerza, protección e introspección sanadora.</p></div>
     </div>
     <button class="info-cta" onclick="openModal('animales')">✦ Descubrir mi Animal de Poder ✦</button>
+  </div>
+
+  <!-- QUIZ ANIMAL DE PODER -->
+  <div class="pq-wrap rv" id="pq-wrap">
+    <div id="pq-intro">
+      <p class="pq-intro-lbl">✦ Autodescubrimiento Guiado ✦</p>
+      <h4>¿Prefieres descubrirlo ahora mismo?</h4>
+      <p>Responde este breve quiz con total sinceridad — no elijas la opción que más te guste estéticamente, elige la que resuene con tu intuición profunda.</p>
+      <button class="info-cta" onclick="startAnimalQuiz()">✦ Comenzar el Quiz ✦</button>
+    </div>
+    <div class="pq-quiz" id="pq-quiz">
+      <div class="pq-progress"><div class="pq-progress-bar" id="pq-progress-bar"></div></div>
+      <p class="pq-step-lbl" id="pq-step-lbl"></p>
+      <h4 class="pq-question" id="pq-question"></h4>
+      <div class="pq-options" id="pq-options"></div>
+    </div>
+    <div class="pq-result" id="pq-result"></div>
   </div>
 </div>
 
@@ -2862,6 +2911,135 @@ function openArmModal(a){
   $('amm-overlay').classList.add('on');
 }
 renderArm(MENORES_DATA,false);
+
+// ═══════════════════════════════════════
+// QUIZ: ¿CUÁL ES TU ANIMAL DE PODER?
+// Mismo patrón de conversión: revelación parcial del resultado + CTA a
+// WhatsApp con mensaje prellenado para desbloquear la lectura completa.
+// ═══════════════════════════════════════
+const PQ_QUESTIONS=[
+  {q:'Cuando recuerdas tu infancia o analizas tus sueños recurrentes, ¿cuál de estas experiencias ha estado más presente?',
+   opts:{
+     A:'Sueños donde vuelas, estás en las alturas, o una fascinación innata por mirar el cielo y sentir el viento.',
+     B:'Sueños con bosques densos, montañas, persecuciones o una sensación de ser un protector/guardián en la oscuridad.',
+     C:'Sueños con agua, cuevas, túneles, o visiones de serpientes y criaturas que cambian de forma y piel.',
+     D:'Recuerdos de sentirte parte de un grupo o tribu, pero al mismo tiempo con una necesidad brutal de libertad e independencia personal.',
+     E:'Sentir una conexión profunda con la tierra, la vegetación, o una extraña sensación de paciencia ancestral ante el tiempo.'
+   }},
+  {q:'Si le preguntas a tus seres queridos, o analizas tu mayor talento en momentos de crisis, ¿cuál es tu "medicina"?',
+   opts:{
+     A:'Visión y perspectiva: puedo elevarme sobre el drama, ver la imagen completa y encontrar claridad donde otros ven caos.',
+     B:'Fuerza e introspección: tengo una capacidad tremenda para sostenerme sola/o, sanar mis propias heridas y proteger con firmeza a los míos.',
+     C:'Transmutación y sanación: sabiduría para morir a viejas etapas, dejar ir el pasado y adaptarme a cualquier cambio, por radical que sea.',
+     D:'Intuición y lealtad: me guío por la corazonada, trabajo impecablemente en equipo, pero mantengo un instinto salvaje y sabio.',
+     E:'Anclaje y estabilidad: aporto calma, paciencia, estructura sólida y nutrición a las personas que me rodean.'
+   }},
+  {q:'El animal de poder también refleja tu mayor aprendizaje terrenal. ¿Cuál es tu sombra más recurrente?',
+   opts:{
+     A:'Distanciamiento emocional, exceso de intelectualización, o sentir que no encajas en las bajas frecuencias del día a día.',
+     B:'Aislamiento extremo, territorialidad, o reaccionar con excesiva agresividad cuando sientes tu espacio invadido.',
+     C:'Miedo a la pérdida de control, lidiar con sombras profundas, o tendencia a procesos intensos de autodestrucción y renacimiento.',
+     D:'Conflicto entre pertenecer a una jauría/sociedad y la necesidad compulsiva de huir en soledad.',
+     E:'Terquedad, pesadez para iniciar cambios, o miedo al movimiento y a la incertidumbre.'
+   }},
+  {q:'Imagina que entras en un estado de meditación profunda o viaje con tambor. ¿A qué entorno natural viaja espontáneamente tu mente para recargarse?',
+   opts:{
+     A:'La cima de una montaña helada o un acantilado donde soplan corrientes de aire limpio.',
+     B:'La profundidad de un bosque ancestral, entre árboles antiguos, sombras y niebla.',
+     C:'La orilla de un río, un lago profundo, el mar, o dentro de una cueva subterránea húmeda.',
+     D:'Una gran estepa, tundra o un bosque abierto bajo la luz de la luna llena.',
+     E:'Un valle fértil, tierra húmeda tras la lluvia, o la selva densa y abundante.'
+   }},
+  {q:'¿Cómo te relacionas energéticamente con el entorno social?',
+   opts:{
+     A:'Directo/a, enfocado/a en el objetivo, observador/a silencioso/a que habla solo cuando tiene una verdad importante que decir.',
+     B:'Imponente pero reservado/a; la gente siente tu presencia aun cuando estás en silencio.',
+     C:'Magnético/a, misterioso/a, fluido/a; cambias según la energía del entorno y detectas fácilmente las intenciones ocultas.',
+     D:'Expresivo/a, apasionado/a, comunicativo/a con tu círculo cercano, pero distante con los extraños.',
+     E:'Calmo/a, acogedor/a, firme; transmites la sensación de ser un refugio seguro para otros.'
+   }}
+];
+const PQ_RESULTS={
+  A:{n:'Águila / Cóndor',g:'🦅',elem:'Aire · Visión Superior',
+     teaser:'Tu medicina es la visión elevada: ves con claridad donde otros solo perciben caos, y tu alma necesita las alturas para respirar.',
+     full:'El Águila/Cóndor te enseña a sostener la mirada del espíritu: observar la vida entera desde arriba sin perder el detalle de lo pequeño. Tu aprendizaje actual es aterrizar esa visión en acciones concretas, sin desconectarte del cuerpo ni de quienes caminan a tu lado. En sesión trabajamos el ritual específico para anclar esta visión a tierra.'},
+  B:{n:'Oso',g:'🐻',elem:'Tierra · Fuerza del Bosque',
+     teaser:'Tu medicina es la fuerza silenciosa: sostienes, proteges y sanas tus propias heridas en soledad antes de mostrarlas al mundo.',
+     full:'El Oso te invita a un ciclo de introspección profunda —como su hibernación— antes de manifestar tu poder hacia afuera. Tu aprendizaje actual es abrir tu territorio a la confianza sin perder la firmeza que te protege. En sesión trabajamos el ritual específico para abrir ese territorio con seguridad.'},
+  C:{n:'Serpiente',g:'🐍',elem:'Agua · Transmutación',
+     teaser:'Tu medicina es la transmutación: mudas de piel una y otra vez, dejando morir lo que ya no sirve para renacer más sabio/a.',
+     full:'La Serpiente te enseña que el cambio radical no es destrucción sino purificación. Tu aprendizaje actual es soltar el miedo a perder el control durante la transformación, confiando en que cada muda te acerca más a tu verdadera forma. En sesión trabajamos el ritual específico para acompañar esa muda con seguridad.'},
+  D:{n:'Lobo',g:'🐺',elem:'Instinto · Manada',
+     teaser:'Tu medicina es la lealtad instintiva: lees las intenciones antes que las palabras y sabes cuándo caminar en manada y cuándo aullar en soledad.',
+     full:'El Lobo te enseña a honrar tanto tu necesidad de pertenecer como tu llamado a la libertad, sin vivir ese conflicto como una guerra interna. Tu aprendizaje actual es confiar en tu manada elegida sin perder tu instinto salvaje. En sesión trabajamos el ritual específico para integrar ambas partes.'},
+  E:{n:'Bisonte',g:'🦬',elem:'Tierra · Abundancia',
+     teaser:'Tu medicina es el anclaje: eres refugio, abundancia y estabilidad para quienes te rodean, aunque a veces cueste moverte.',
+     full:'El Bisonte te recuerda que la verdadera abundancia se comparte y que la paciencia no es lo mismo que la parálisis. Tu aprendizaje actual es animarte a dar el paso hacia lo incierto, confiando en que tu raíz seguirá firme. En sesión trabajamos el ritual específico para activar ese movimiento.'}
+};
+let pqAnswers=[],pqCurrentQ=0;
+function startAnimalQuiz(){
+  pqAnswers=[];pqCurrentQ=0;
+  $('pq-intro').style.display='none';
+  $('pq-result').classList.remove('show');
+  $('pq-result').innerHTML='';
+  $('pq-quiz').classList.add('show');
+  renderPQQuestion();
+  $('pq-wrap').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function renderPQQuestion(){
+  const total=PQ_QUESTIONS.length;
+  const q=PQ_QUESTIONS[pqCurrentQ];
+  $('pq-step-lbl').textContent='Pregunta '+(pqCurrentQ+1)+' de '+total;
+  $('pq-progress-bar').style.width=(pqCurrentQ/total*100)+'%';
+  $('pq-question').textContent=q.q;
+  const opts=$('pq-options');
+  opts.innerHTML='';
+  Object.entries(q.opts).forEach(([letter,text])=>{
+    const b=document.createElement('button');
+    b.className='pq-option-btn';
+    b.innerHTML='<span class="pq-opt-letter">'+letter+'</span><span>'+text+'</span>';
+    b.onclick=()=>selectPQOption(letter);
+    opts.appendChild(b);
+  });
+}
+function selectPQOption(letter){
+  pqAnswers.push(letter);
+  pqCurrentQ++;
+  if(pqCurrentQ<PQ_QUESTIONS.length){
+    renderPQQuestion();
+  }else{
+    $('pq-progress-bar').style.width='100%';
+    setTimeout(showPQResult,350);
+  }
+}
+function showPQResult(){
+  const count={};
+  pqAnswers.forEach(l=>count[l]=(count[l]||0)+1);
+  let topKey='A',topVal=0;
+  Object.entries(count).forEach(([k,v])=>{if(v>topVal){topVal=v;topKey=k}});
+  const animal=PQ_RESULTS[topKey];
+  $('pq-quiz').classList.remove('show');
+  const waText='Hola ✦ Acabo de hacer el quiz de Animal de Poder en la página y mi resultado fue '+animal.g+' '+animal.n+'. Me gustaría conocer mi lectura completa y agendar mi sesión.';
+  const waUrl='https://wa.me/'+OWNER_WHATSAPP+'?text='+encodeURIComponent(waText);
+  $('pq-result').innerHTML=
+    '<div class="pq-result-icon">'+animal.g+'</div>'+
+    '<p class="pq-result-lbl">Tu Animal de Poder es</p>'+
+    '<h3 class="pq-result-name">'+animal.n+'</h3>'+
+    '<p class="pq-result-elem">'+animal.elem+'</p>'+
+    '<p class="pq-result-teaser">'+animal.teaser+'</p>'+
+    '<div class="pq-locked">'+
+      '<p class="pq-locked-text">'+animal.full+'</p>'+
+      '<div class="pq-locked-overlay"><span>🔒</span><p>Tu lectura completa —con el ritual de conexión específico para tu animal— está guardada para tu sesión personalizada</p></div>'+
+    '</div>'+
+    '<a href="'+waUrl+'" target="_blank" rel="noopener" class="pq-unlock-btn">✦ Desbloquear mi Lectura Completa por WhatsApp ✦</a>'+
+    '<button class="pq-restart-btn" onclick="restartPQ()">↺ Repetir el quiz</button>';
+  $('pq-result').classList.add('show');
+}
+function restartPQ(){
+  $('pq-result').classList.remove('show');
+  $('pq-result').innerHTML='';
+  $('pq-intro').style.display='';
+}
 
 // ═══════════════════════════════════════
 // SCROLL REVEAL
