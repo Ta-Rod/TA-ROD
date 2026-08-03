@@ -695,7 +695,7 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
       <!-- controles rueda -->
       <div class="carta-wheel-controls">
         <button class="cwc-btn" id="btn-toggle-lines" onclick="toggleAspectLines()">👁 Ocultar líneas de aspecto</button>
-        <button class="cwc-btn" onclick="downloadCartaDocx()">⬇ Descargar Carta (.docx)</button>
+        <button class="cwc-btn" id="btn-download-docx" onclick="downloadCartaDocx()">⬇ Descargar Carta (.docx)</button>
       </div>
       <!-- rueda + posiciones -->
       <div class="carta-wheel-wrap">
@@ -1766,14 +1766,97 @@ function showCartaError(msg){$('carta-loading').classList.remove('show');const e
 function clearCarta(){$('b-date').value='';$('b-time').value='';$('b-city').value='';$('carta-error').classList.remove('show')}
 function resetCarta(){clearCarta();$('carta-result').classList.remove('show');$('carta-loading').classList.remove('show');$('planet-tip').querySelector('p').textContent='Selecciona un planeta para conocer su influencia chamánica...';cartaData=null;$('carta-natal').scrollIntoView({behavior:'smooth',block:'start'})}
 
-// ── Descarga carta natal como DOCX (usando la API Anthropic) ──
+// ── Descarga carta natal como DOCX real, generado en el navegador ──
+// Se carga la librería 'docx' (dolanmiu/docx, MIT) solo cuando hace falta,
+// desde CDN, y se genera el archivo por completo en el dispositivo del
+// visitante — sin depender de un servidor. Si falla, usa el respaldo
+// existente (intenta el servidor local y si no, descarga un .txt).
+let DOCX_LIB_PROMISE=null;
+function loadDocxLib(){
+  if(window.docx)return Promise.resolve(window.docx);
+  if(DOCX_LIB_PROMISE)return DOCX_LIB_PROMISE;
+  DOCX_LIB_PROMISE=new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src='https://unpkg.com/docx@9.7.1/dist/index.umd.cjs';
+    s.onload=()=>resolve(window.docx);
+    s.onerror=()=>reject(new Error('No se pudo cargar la librería de generación de documentos.'));
+    document.head.appendChild(s);
+  });
+  return DOCX_LIB_PROMISE;
+}
 async function downloadCartaDocx(){
   if(!cartaData){alert('Primero genera tu carta natal.');return}
-  const btn=document.querySelector('.cwc-btn:last-child');
+  const btn=$('btn-download-docx');
   const orig=btn.textContent;btn.textContent='⏳ Generando documento...';btn.disabled=true;
   try{
+    const docxLib=await loadDocxLib();
+    await buildCartaWordDoc(docxLib,cartaData);
+  }catch(e){
+    console.warn('No se pudo generar el .docx real, se usa respaldo en .txt:',e);
     await generateAndDownloadDocx('carta',cartaData);
   }finally{btn.textContent=orig;btn.disabled=false}
+}
+async function buildCartaWordDoc(docxLib,data){
+  const{Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,HeadingLevel,AlignmentType,BorderStyle,WidthType,ShadingType}=docxLib;
+  const{positions,houses,geo,year,month,day,hour,minute}=data;
+  const monthNames=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const planetsArr=[];
+  PLANET_ORDER.forEach(p=>{
+    const lon=positions[p.key];if(lon===undefined)return;
+    const pos=degToSignPos(lon),house=positions[p.key+'_house']||'';
+    planetsArr.push({sym:p.sym,name:p.name,sign:SIGN_NAMES[pos.signIdx],deg:pos.deg+'°'+String(pos.min).padStart(2,'0')+'′',house});
+  });
+  const housesArr=[];
+  for(let i=1;i<=12;i++){if(houses[i]===undefined)continue;const pos=degToSignPos(houses[i]);housesArr.push({num:'Casa '+i,sign:SIGN_NAMES[pos.signIdx],deg:pos.deg+'°'})}
+  const elemCount={fuego:0,tierra:0,aire:0,agua:0};
+  ['sun','moon','mercury','venus','mars','jupiter','saturn'].forEach(k=>{const lon=positions[k];if(lon===undefined)return;const sName=SIGN_NAMES[degToSignPos(lon).signIdx];const elem=SIGN_ELEM[sName];if(elem)elemCount[elem]++});
+  const interps=[];
+  PLANET_ORDER.slice(0,7).forEach(p=>{const lon=positions[p.key];if(lon===undefined)return;const pos=degToSignPos(lon);interps.push({titulo:p.sym+' '+p.name+' en '+SIGN_NAMES[pos.signIdx],texto:getPlanetTipFull(p.sym,SIGN_NAMES[pos.signIdx])})});
+
+  const GOLD='9C7A2E';
+  function h(text){return new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:300,after:150},children:[new TextRun({text,bold:true,color:GOLD,font:'Georgia'})]})}
+  function mkCell(text,bold){
+    return new TableCell({
+      children:[new Paragraph({children:[new TextRun({text:String(text),bold:!!bold,font:'Georgia',size:20})]})],
+      shading:bold?{type:ShadingType.CLEAR,color:'auto',fill:'F4EEDD'}:undefined
+    });
+  }
+  function tableFromRows(headerCells,rows){
+    return new Table({
+      width:{size:100,type:WidthType.PERCENTAGE},
+      rows:[
+        new TableRow({children:headerCells.map(c=>mkCell(c,true))}),
+        ...rows.map(r=>new TableRow({children:r.map(c=>mkCell(c))}))
+      ]
+    });
+  }
+  const doc=new Document({
+    sections:[{
+      properties:{},
+      children:[
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:80},children:[new TextRun({text:'TA · ROD',bold:true,size:44,color:GOLD,font:'Georgia'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:300},children:[new TextRun({text:'Carta Natal',italics:true,size:28,color:'555555',font:'Georgia'})]}),
+        new Paragraph({spacing:{after:200},children:[new TextRun({text:'Fecha de nacimiento: ',bold:true,font:'Georgia'}),new TextRun({text:day+' de '+monthNames[month-1]+' de '+year+', '+String(hour||12).padStart(2,'0')+':'+String(minute||0).padStart(2,'0')+' hrs',font:'Georgia'})]}),
+        new Paragraph({spacing:{after:300},children:[new TextRun({text:'Lugar de nacimiento: ',bold:true,font:'Georgia'}),new TextRun({text:geo.name,font:'Georgia'})]}),
+        h('Posiciones Planetarias'),
+        tableFromRows(['Planeta','Signo','Grado','Casa'],planetsArr.map(p=>[p.sym+' '+p.name,p.sign,p.deg,p.house||'—'])),
+        h('Casas (Sistema Placidus)'),
+        tableFromRows(['Casa','Signo','Grado'],housesArr.map(hh=>[hh.num,hh.sign,hh.deg])),
+        h('Elementos'),
+        new Paragraph({spacing:{after:300},children:[new TextRun({text:Object.entries(elemCount).map(([k,v])=>k.charAt(0).toUpperCase()+k.slice(1)+': '+v).join('   ·   '),font:'Georgia'})]}),
+        h('Interpretación Chamánica'),
+        ...interps.flatMap(i=>[
+          new Paragraph({spacing:{before:150,after:60},children:[new TextRun({text:i.titulo,bold:true,color:GOLD,font:'Georgia'})]}),
+          new Paragraph({spacing:{after:180},children:[new TextRun({text:i.texto,font:'Georgia'})]})
+        ]),
+        new Paragraph({spacing:{before:400},alignment:AlignmentType.CENTER,border:{top:{color:'CCCCCC',space:8,style:BorderStyle.SINGLE,size:6}},children:[new TextRun({text:'✦ TA-ROD · Tarot · Astrología · Chamanismo · +(506) 8821-5669',italics:true,color:'888888',size:18,font:'Georgia'})]})
+      ]
+    }]
+  });
+  const blob=await Packer.toBlob(doc);
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='TA-ROD_Carta_Natal.docx';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
 }
 
 async function downloadSectionDocx(sectionId){
