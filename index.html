@@ -501,6 +501,57 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
   .info-grid{grid-template-columns:1fr}
   .tab-btn{font-size:.58rem;padding:.65rem 1.1rem}
 }
+/* CLIMA CÓSMICO (widget "hoy" del calendario lunar) */
+.cw-head{display:flex;align-items:center;gap:1.1rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--br)}
+.cw-moon-icon{flex-shrink:0;filter:drop-shadow(0 0 6px rgba(201,168,76,.25))}
+.cw-moon-photo{flex-shrink:0;filter:drop-shadow(0 2px 14px rgba(0,0,0,.55)) drop-shadow(0 0 10px rgba(201,168,76,.18))}
+.cw-live-tag{display:inline-flex;align-items:center;gap:.42rem;font-size:.5rem;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);margin-bottom:.4rem}
+.cw-live-dot{width:6px;height:6px;border-radius:50%;background:#e0495c;box-shadow:0 0 6px #e0495c;flex-shrink:0;animation:cwPulse 1.7s ease-in-out infinite}
+@keyframes cwPulse{0%,100%{opacity:1}50%{opacity:.3}}
+.cw-constellation{font-size:.66rem;color:var(--ts);font-family:'Cormorant Garamond',serif;font-style:italic;margin-top:.3rem}
+.cw-head-text{flex:1;min-width:0}
+.cw-eyebrow{font-size:.52rem;letter-spacing:.28em;text-transform:uppercase;color:var(--gd);margin-bottom:.3rem}
+.cw-phase-name{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--gl);line-height:1.2}
+.cw-pct{font-size:.68rem;color:var(--ts);font-family:'Cormorant Garamond',serif;font-style:italic}
+.cw-row{font-size:.76rem;margin-bottom:.5rem;line-height:1.55;color:var(--ts)}
+.cw-row b{color:var(--gold);font-weight:500}
+.cw-astro-text{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--tp);font-size:.88rem;line-height:1.65;margin:.7rem 0 1.1rem}
+.cw-card{display:flex;align-items:center;gap:.85rem;padding:.75rem .95rem;border:1px solid var(--br);background:rgba(201,168,76,.03);cursor:pointer;transition:all .3s;text-align:left}
+.cw-card:hover{border-color:var(--bb);background:rgba(201,168,76,.06)}
+.cw-card-emoji{font-size:1.5rem;flex-shrink:0}
+.cw-card-txt{min-width:0}
+.cw-card-lbl{font-size:.5rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gd);margin-bottom:.15rem}
+.cw-card-name{font-family:'Playfair Display',serif;font-size:.85rem;color:var(--gl)}
+.cw-card-kw{font-size:.62rem;color:var(--ts);font-style:italic;font-family:'Cormorant Garamond',serif}
+.cw-foot{font-size:.52rem;letter-spacing:.1em;color:var(--tm);text-align:center;margin-top:1rem}
+@media(max-width:600px){.cosmic-widget{padding:1.2rem 1.2rem}.cw-head{gap:.8rem}.cw-moon-icon svg{width:44px;height:44px}}
+
+/* CALENDARIO LUNAR (módulo astrología) */
+.lc-today-wrap{max-width:640px;margin:0 auto 2.5rem;padding:1.7rem 1.9rem;border:1px solid var(--br);background:rgba(201,168,76,.02)}
+.lc-cal-wrap{max-width:640px;margin:0 auto;border:1px solid var(--br);padding:1.5rem 1.6rem;background:rgba(201,168,76,.02)}
+.lc-cal-head{text-align:center;font-family:'Playfair Display',serif;color:var(--gl);font-size:1.15rem;margin-bottom:1.3rem;text-transform:capitalize}
+.lc-cal-nav-row{display:flex;align-items:center;justify-content:center;gap:1rem;margin-bottom:1.3rem}
+.lc-cal-nav-row .lc-cal-head{margin-bottom:0}
+.lc-today-btn{background:transparent;border:1px solid var(--br);color:var(--tm);font-family:'Inter',sans-serif;font-size:.55rem;letter-spacing:.15em;text-transform:uppercase;padding:.3rem .7rem;cursor:pointer;transition:all .3s;white-space:nowrap}
+.lc-today-btn:hover{border-color:var(--bb);color:var(--gold)}
+.lc-today-btn:disabled{opacity:.25;pointer-events:none}
+.lc-days-head{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px}
+.lc-days-head span{text-align:center;font-size:.46rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gd);display:block;padding:.2rem 0}
+.lc-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.lc-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.12rem;border-radius:3px;transition:all .2s;position:relative;padding-bottom:.3rem}
+.lc-cell.other-month{opacity:.12}
+.lc-cell.today{background:rgba(201,168,76,.12);border:1px solid var(--bb)}
+.lc-cell svg{width:19px;height:19px}
+.lc-daynum{font-size:.52rem;color:var(--tm)}
+.lc-cell.today .lc-daynum{color:var(--gold)}
+.lc-event-tag{position:absolute;bottom:-1px;font-size:.32rem;letter-spacing:.04em;text-transform:uppercase;color:var(--gold);white-space:nowrap}
+.lc-legend{display:flex;justify-content:center;gap:1.3rem;margin-top:1.3rem;flex-wrap:wrap}
+.lc-legend-item{display:flex;align-items:center;gap:.4rem;font-size:.56rem;color:var(--ts)}
+.lc-legend-item svg{width:15px;height:15px}
+.lc-next-phases{display:flex;justify-content:center;gap:2.2rem;margin-top:1.5rem;flex-wrap:wrap;text-align:center;border-top:1px solid var(--br);padding-top:1.3rem}
+.lc-next-item .lc-lbl{display:block;font-size:.48rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gd);margin-bottom:.35rem}
+.lc-next-item .lc-val{font-family:'Playfair Display',serif;color:var(--gl);font-size:.85rem}
+@media(max-width:560px){.lc-cell svg{width:15px;height:15px}.lc-daynum{font-size:.42rem}.lc-today-wrap,.lc-cal-wrap{padding:1.1rem .8rem}}
 /* COMENTARIOS / TESTIMONIOS */
 .com-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--br);margin-bottom:3.5rem}
 .com-card{background:var(--abyss);padding:2.4rem 1.8rem;text-align:left;transition:all .4s;position:relative}
@@ -695,6 +746,7 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
     <button class="tab-btn active" data-tab="carta-natal" onclick="activateTab('modulo-astrologia','carta-natal')">Carta Natal</button>
     <button class="tab-btn" data-tab="revolucion-solar" onclick="activateTab('modulo-astrologia','revolucion-solar')">Revolución Solar</button>
     <button class="tab-btn" data-tab="elementos" onclick="activateTab('modulo-astrologia','elementos')">Elementos</button>
+    <button class="tab-btn" data-tab="calendario-lunar" onclick="activateTab('modulo-astrologia','calendario-lunar')">🌙 Calendario Lunar</button>
   </div>
   <!-- CARTA NATAL -->
 <div class="tab-panel active" id="carta-natal" data-module="modulo-astrologia" data-tab="carta-natal">
@@ -770,6 +822,13 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
       <div class="ec agua" onclick="activElem(this)"><span class="ec-icon">🌊</span><h3 class="ec-name">Agua</h3><span class="ec-sign">Cáncer · Escorpio · Piscis</span><p class="ec-desc">El río de las emociones, la profundidad del inconsciente, la sanación.</p><div style="margin-top:1rem"><span class="tag">Emoción</span><span class="tag">Intuición</span><span class="tag">Sanación</span></div></div>
     </div>
   </div></div>
+
+  <!-- CALENDARIO LUNAR -->
+<div class="tab-panel" id="calendario-lunar" data-module="modulo-astrologia" data-tab="calendario-lunar" style="background:linear-gradient(180deg,var(--abyss) 0%,rgba(18,10,46,.5) 50%,var(--abyss) 100%)">
+  <div class="lc-today-wrap rv" id="lc-today"></div>
+  <div class="lc-cal-wrap rv" id="lc-cal"></div>
+  <div class="back-row" style="margin-top:2.5rem;border-top:none;padding-top:0"><button class="info-cta" onclick="openModal()">✦ Agendar una Sesión Guiada por tu Ciclo Lunar ✦</button></div>
+</div>
 
 
   <div class="back-row"><a href="#hero" class="btn-back">↑ Volver al inicio</a></div>
@@ -3055,6 +3114,229 @@ function openArmModal(a){
   $('amm-overlay').classList.add('on');
 }
 renderArm(MENORES_DATA,false);
+
+// ═══════════════════════════════════════
+// CALENDARIO LUNAR / CLIMA CÓSMICO
+// Fase lunar, % de iluminación y signo zodiacal real, calculados con
+// Astronomy Engine (ya cargado localmente para la Carta Natal) — y si por
+// lo que sea no está disponible, con un motor propio de respaldo basado en
+// las fórmulas de baja precisión de Jean Meeus.
+// ═══════════════════════════════════════
+const ZOD_LUNA=[
+  {n:'Aries',g:'♈',el:'fuego'},{n:'Tauro',g:'♉',el:'tierra'},{n:'Géminis',g:'♊',el:'aire'},
+  {n:'Cáncer',g:'♋',el:'agua'},{n:'Leo',g:'♌',el:'fuego'},{n:'Virgo',g:'♍',el:'tierra'},
+  {n:'Libra',g:'♎',el:'aire'},{n:'Escorpio',g:'♏',el:'agua'},{n:'Sagitario',g:'♐',el:'fuego'},
+  {n:'Capricornio',g:'♑',el:'tierra'},{n:'Acuario',g:'♒',el:'aire'},{n:'Piscis',g:'♓',el:'agua'}
+];
+const ELEM_CLAUSE={
+  fuego:'avivar la pasión, animarte a tomar la iniciativa y actuar con el coraje que ya llevas dentro',
+  tierra:'organizar con método el trabajo práctico, revisar tus metas concretas e integrar disciplina y paciencia',
+  aire:'poner en palabras lo que piensas, conectar con otras personas y mirar la situación desde una perspectiva más amplia',
+  agua:'honrar lo que sientes, profundizar en tu intuición y dejar que la emoción te muestre el camino'
+};
+const PHASE_INFO=[
+  {max:6,  n:'Luna Nueva',            pl:'fases de Luna Nueva',      clause:'sembrar intenciones nuevas, iniciar proyectos y soltar lo que ya cumplió su ciclo'},
+  {max:84, n:'Luna Creciente',        pl:'fases de Luna Creciente',  clause:'dar los primeros pasos concretos hacia lo que sembraste, con acción constante aunque los resultados aún no se vean del todo'},
+  {max:96, n:'Cuarto Creciente',      pl:'fases de Cuarto Creciente',clause:'atravesar la primera gran tensión o decisión del ciclo, ajustando el rumbo con determinación'},
+  {max:174,n:'Luna Gibosa Creciente', pl:'fases Gibosas Crecientes', clause:'concentrar la energía en culminar proyectos, revisar metas prácticas y ajustar los últimos detalles antes de la revelación que trae la Luna Llena'},
+  {max:186,n:'Luna Llena',            pl:'fases de Luna Llena',      clause:'la culminación, la claridad emocional y la revelación de lo que estaba en proceso de manifestarse'},
+  {max:264,n:'Luna Gibosa Menguante', pl:'fases Gibosas Menguantes', clause:'compartir lo aprendido, agradecer el camino recorrido y comenzar a soltar lo que ya no es necesario'},
+  {max:276,n:'Cuarto Menguante',      pl:'fases de Cuarto Menguante',clause:'liberar patrones, cerrar ciclos y hacer espacio consciente para lo nuevo'},
+  {max:354,n:'Luna Menguante',        pl:'fases de Luna Menguante',  clause:'el descanso, la introspección profunda y la preparación silenciosa para la próxima Luna Nueva'},
+  {max:361,n:'Luna Nueva',            pl:'fases de Luna Nueva',      clause:'sembrar intenciones nuevas, iniciar proyectos y soltar lo que ya cumplió su ciclo'}
+];
+function getPhaseInfo(elongDeg){for(const p of PHASE_INFO){if(elongDeg<p.max)return p}return PHASE_INFO[PHASE_INFO.length-1]}
+function getMoonZodiac(deg){return ZOD_LUNA[Math.floor(norm360(deg)/30)%12]}
+
+// ── Motor de respaldo autónomo (sin dependencias externas) ──────────────
+function daysSinceJ2000(date){return(date.getTime()-Date.UTC(2000,0,1,12,0,0))/86400000}
+function sunEclLonApprox(d){
+  const g=norm360(357.529+0.98560028*d)*Math.PI/180;
+  const q=norm360(280.459+0.98564736*d);
+  return norm360(q+1.915*Math.sin(g)+0.020*Math.sin(2*g));
+}
+function moonEclLonApprox(d){
+  const L=218.316+13.176396*d;
+  const M=(134.963+13.064993*d)*Math.PI/180;
+  return norm360(L+6.289*Math.sin(M));
+}
+function findMoonPhaseFallback(targetLon,startDate,limitDays){
+  const stepH=6;let prev=null,prevDate=null;
+  for(let h=0;h<=limitDays*24;h+=stepH){
+    const dt=new Date(startDate.getTime()+h*3600000);
+    const d=daysSinceJ2000(dt);
+    let diff=norm360(moonEclLonApprox(d)-sunEclLonApprox(d)-targetLon);
+    if(diff>180)diff-=360;
+    if(prev!==null&&((prev<=0&&diff>=0)||(prev>=0&&diff<=0))){
+      const frac=Math.abs(prev)/(Math.abs(prev)+Math.abs(diff)||1);
+      return{date:new Date(prevDate.getTime()+(dt.getTime()-prevDate.getTime())*frac)};
+    }
+    prev=diff;prevDate=dt;
+  }
+  return null;
+}
+function searchMoonPhaseAny(targetLon,fromDate,limitDays){
+  try{
+    if(typeof Astronomy!=='undefined'&&Astronomy.SearchMoonPhase){
+      const r=Astronomy.SearchMoonPhase(targetLon,Astronomy.MakeTime(fromDate),limitDays);
+      if(r)return{date:r.date};
+    }
+  }catch(e){console.warn('SearchMoonPhase (Astronomy Engine) falló, uso motor propio:',e)}
+  return findMoonPhaseFallback(targetLon,fromDate,limitDays);
+}
+function cosmicWeatherFor(date){
+  try{
+    if(typeof Astronomy!=='undefined'&&Astronomy.EclipticGeoMoon&&Astronomy.MoonPhase&&Astronomy.Illumination){
+      const moonLon=norm360(Astronomy.EclipticGeoMoon(date).lon);
+      const elong=norm360(Astronomy.MoonPhase(date));
+      const illum=Astronomy.Illumination(Astronomy.Body.Moon,date);
+      const pct=Math.round(illum.phase_fraction*1000)/10;
+      const waxing=elong<180;
+      const phase=getPhaseInfo(elong);
+      const zsign=getMoonZodiac(moonLon);
+      const clima='Las '+phase.pl+' en signos de '+zsign.el+' como '+zsign.n+' suelen invitar a '+phase.clause+', además de '+ELEM_CLAUSE[zsign.el]+'.';
+      return{moonLon,elong,pct,waxing,phase,zsign,clima,phaseCycle:elong/360};
+    }
+  }catch(e){console.warn('Astronomy Engine no disponible, uso motor propio:',e)}
+  const d=daysSinceJ2000(date);
+  const sunLon=sunEclLonApprox(d);
+  const moonLon=moonEclLonApprox(d);
+  const elong=norm360(moonLon-sunLon);
+  const pct=Math.round(((1-Math.cos(elong*Math.PI/180))/2)*1000)/10;
+  const waxing=elong<180;
+  const phase=getPhaseInfo(elong);
+  const zsign=getMoonZodiac(moonLon);
+  const clima='Las '+phase.pl+' en signos de '+zsign.el+' como '+zsign.n+' suelen invitar a '+phase.clause+', además de '+ELEM_CLAUSE[zsign.el]+'.';
+  return{moonLon,elong,pct,waxing,phase,zsign,clima,phaseCycle:elong/360};
+}
+// Ícono de fase lunar real (arco+elipse: rx = R·|cos(2π·fase)|, técnica
+// estándar de renderizado de fases lunares en SVG)
+function moonIconSVG(phaseCycle,size){
+  size=size||52;
+  const R=size/2-2,cx=size/2,cy=size/2;
+  const k=-Math.cos(2*Math.PI*phaseCycle);
+  const rx=Math.abs(k)*R;
+  const waxing=phaseCycle<0.5;
+  const outer=waxing?1:0;
+  const inner=k>=0?outer:(outer?0:1);
+  const lit=`M ${cx} ${(cy-R).toFixed(2)} A ${R.toFixed(2)} ${R.toFixed(2)} 0 1 ${outer} ${cx} ${(cy+R).toFixed(2)} A ${rx.toFixed(2)} ${R.toFixed(2)} 0 1 ${inner} ${cx} ${(cy-R).toFixed(2)} Z`;
+  return'<svg viewBox="0 0 '+size+' '+size+'" xmlns="http://www.w3.org/2000/svg">'+
+    '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="#0d0a22"/>'+
+    '<path d="'+lit+'" fill="#D9BE7A"/>'+
+    '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="rgba(201,168,76,.5)" stroke-width="0.7"/>'+
+    '</svg>';
+}
+// Textura lunar real (NASA/LRO, distribuida públicamente en el paquete de
+// ejemplos de three.js). Si la imagen no carga (sin internet, CDN caído),
+// el círculo de fondo #0d0a22 sigue mostrando la silueta de la fase igual.
+const MOON_TEXTURE_URL='https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/textures/planets/moon_1024.jpg';
+function moonPhotoSVG(phaseCycle,size){
+  size=size||100;
+  const R=size/2-2,cx=size/2,cy=size/2;
+  const k=-Math.cos(2*Math.PI*phaseCycle);
+  const rx=Math.abs(k)*R;
+  const waxing=phaseCycle<0.5;
+  const outer=waxing?1:0;
+  const inner=k>=0?outer:(outer?0:1);
+  const lit='M '+cx+' '+(cy-R).toFixed(2)+' A '+R.toFixed(2)+' '+R.toFixed(2)+' 0 1 '+outer+' '+cx+' '+(cy+R).toFixed(2)+' A '+rx.toFixed(2)+' '+R.toFixed(2)+' 0 1 '+inner+' '+cx+' '+(cy-R).toFixed(2)+' Z';
+  const uid='mp'+Math.round(Math.random()*1e7);
+  return'<svg viewBox="0 0 '+size+' '+size+'" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">'+
+    '<defs>'+
+      '<clipPath id="'+uid+'c"><circle cx="'+cx+'" cy="'+cy+'" r="'+R+'"/></clipPath>'+
+      '<clipPath id="'+uid+'l"><path d="'+lit+'"/></clipPath>'+
+      '<radialGradient id="'+uid+'g" cx="35%" cy="30%" r="80%">'+
+        '<stop offset="0%" stop-color="rgba(255,255,255,.22)"/>'+
+        '<stop offset="60%" stop-color="rgba(255,255,255,0)"/>'+
+      '</radialGradient>'+
+    '</defs>'+
+    '<g clip-path="url(#'+uid+'c)">'+
+      '<image href="'+MOON_TEXTURE_URL+'" xlink:href="'+MOON_TEXTURE_URL+'" x="0" y="0" width="'+size+'" height="'+size+'" preserveAspectRatio="xMidYMid slice" opacity=".3"/>'+
+      '<rect x="0" y="0" width="'+size+'" height="'+size+'" fill="#050514" opacity=".5"/>'+
+    '</g>'+
+    '<g clip-path="url(#'+uid+'l)">'+
+      '<image href="'+MOON_TEXTURE_URL+'" xlink:href="'+MOON_TEXTURE_URL+'" x="0" y="0" width="'+size+'" height="'+size+'" preserveAspectRatio="xMidYMid slice"/>'+
+    '</g>'+
+    '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="url(#'+uid+'g)" clip-path="url(#'+uid+'c)"/>'+
+    '<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="rgba(201,168,76,.5)" stroke-width="0.8"/>'+
+    '</svg>';
+}
+function renderLunarToday(){
+  const el=$('lc-today');if(!el)return;
+  const now=new Date();
+  const cw=cosmicWeatherFor(now);
+  el.innerHTML=
+    '<div class="cw-head"><div class="cw-moon-photo">'+moonPhotoSVG(cw.phaseCycle,104)+'</div>'+
+    '<div class="cw-head-text"><p class="cw-live-tag"><span class="cw-live-dot"></span>En Vivo · Un vistazo a lo que ocurre hoy</p>'+
+    '<p class="cw-phase-name" style="font-size:1.35rem">'+cw.phase.n+'</p>'+
+    '<p class="cw-pct">'+cw.pct+'% de iluminación · '+(cw.waxing?'rumbo a la Luna Llena':'rumbo a la Luna Nueva')+'</p>'+
+    '<p class="cw-constellation">🌌 Frente a la constelación de '+cw.zsign.n+'</p></div></div>'+
+    '<p class="cw-row"><b>Tránsito zodiacal:</b> la Luna transita por el signo de '+cw.zsign.g+' '+cw.zsign.n+' (elemento '+cw.zsign.el+').</p>'+
+    '<p class="cw-astro-text" style="font-size:.95rem"><b style="color:var(--gold);font-style:normal;font-family:Inter,sans-serif;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase">Clima astrológico —</b> '+cw.clima+'</p>';
+}
+let lcViewYear=null,lcViewMonth=null;
+function lcChangeMonth(delta){
+  if(lcViewYear===null){const n=new Date();lcViewYear=n.getFullYear();lcViewMonth=n.getMonth()}
+  lcViewMonth+=delta;
+  if(lcViewMonth<0){lcViewMonth=11;lcViewYear--}
+  if(lcViewMonth>11){lcViewMonth=0;lcViewYear++}
+  renderLunarCalendar();
+}
+function lcResetToday(){lcViewYear=null;lcViewMonth=null;renderLunarCalendar()}
+function renderLunarCalendar(){
+  const wrap=$('lc-cal');if(!wrap)return;
+  const now=new Date();
+  if(lcViewYear===null){lcViewYear=now.getFullYear();lcViewMonth=now.getMonth()}
+  const y=lcViewYear,m=lcViewMonth;
+  const isCurrentMonth=y===now.getFullYear()&&m===now.getMonth();
+  const first=new Date(y,m,1);
+  const startWeekday=first.getDay();
+  const daysInMonth=new Date(y,m+1,0).getDate();
+  const monthLbl=first.toLocaleDateString('es-ES',{month:'long',year:'numeric'});
+  const gridNew=searchMoonPhaseAny(0,first,40);
+  const gridFull=searchMoonPhaseAny(180,first,40);
+  const upNew=searchMoonPhaseAny(0,now,40);
+  const upFull=searchMoonPhaseAny(180,now,40);
+  let cells='';
+  for(let i=0;i<startWeekday;i++)cells+='<div class="lc-cell other-month"></div>';
+  for(let d=1;d<=daysInMonth;d++){
+    const dDate=new Date(y,m,d,12);
+    const cw=cosmicWeatherFor(dDate);
+    const isToday=isCurrentMonth&&d===now.getDate();
+    let tag='';
+    if(gridNew&&gridNew.date.toDateString()===dDate.toDateString())tag='<span class="lc-event-tag">Luna Nueva</span>';
+    if(gridFull&&gridFull.date.toDateString()===dDate.toDateString())tag='<span class="lc-event-tag">Luna Llena</span>';
+    cells+='<div class="lc-cell'+(isToday?' today':'')+'" title="'+cw.phase.n+' · '+cw.pct+'% · '+cw.zsign.n+'">'+moonIconSVG(cw.phaseCycle,19)+'<span class="lc-daynum">'+d+'</span>'+tag+'</div>';
+  }
+  const trailing=(7-((startWeekday+daysInMonth)%7))%7;
+  for(let i=0;i<trailing;i++)cells+='<div class="lc-cell other-month"></div>';
+  wrap.innerHTML=
+    '<div class="lc-cal-nav-row"><button class="cal-nav" onclick="lcChangeMonth(-1)" title="Mes anterior">‹</button>'+
+    '<p class="lc-cal-head">'+monthLbl+'</p>'+
+    '<button class="cal-nav" onclick="lcChangeMonth(1)" title="Mes siguiente">›</button>'+
+    '<button class="lc-today-btn" onclick="lcResetToday()" '+(isCurrentMonth?'disabled':'')+'>↺ Hoy</button></div>'+
+    '<div class="lc-days-head"><span>D</span><span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span></div>'+
+    '<div class="lc-grid">'+cells+'</div>'+
+    '<div class="lc-legend">'+
+      '<div class="lc-legend-item">'+moonIconSVG(0,15)+' Luna Nueva</div>'+
+      '<div class="lc-legend-item">'+moonIconSVG(.25,15)+' Cuarto Creciente</div>'+
+      '<div class="lc-legend-item">'+moonIconSVG(.5,15)+' Luna Llena</div>'+
+      '<div class="lc-legend-item">'+moonIconSVG(.75,15)+' Cuarto Menguante</div>'+
+    '</div>'+
+    ((upNew||upFull)?('<div class="lc-next-phases">'+
+      (upNew?'<div class="lc-next-item"><span class="lc-lbl">Próxima Luna Nueva</span><span class="lc-val">'+upNew.date.toLocaleDateString('es-ES',{day:'numeric',month:'long'})+'</span></div>':'')+
+      (upFull?'<div class="lc-next-item"><span class="lc-lbl">Próxima Luna Llena</span><span class="lc-val">'+upFull.date.toLocaleDateString('es-ES',{day:'numeric',month:'long'})+'</span></div>':'')+
+    '</div>'):'');
+}
+renderLunarToday();
+renderLunarCalendar();
+// Estos widgets muestran datos "en tiempo real" (fase lunar). Si alguien
+// deja la pestaña abierta por horas, hay que recalcular para no mostrar
+// información vieja.
+setInterval(()=>{ try{ renderLunarToday(); }catch(e){} },300000); // cada 5 minutos
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible')return;
+  try{ renderLunarToday(); }catch(e){}
+});
 
 // ═══════════════════════════════════════
 // QUIZ: ¿CUÁL ES TU ANIMAL DE PODER?
