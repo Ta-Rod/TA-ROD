@@ -617,6 +617,7 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
 #celestial-map{margin:0 auto;flex-shrink:0;position:relative;z-index:1;touch-action:none}
 #celestial-map canvas{cursor:grab}
 #celestial-map svg{touch-action:none}
+#cielo-planet-labels{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;pointer-events:none}
 .cielo-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;background:#07071A;z-index:2}
 /* ═══ Modo AR (cámara + inclinación) — capa aditiva sobre el mapa existente ═══ */
 .cielo-ar-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;display:none;background:#000}
@@ -627,8 +628,6 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
 #cielo-ar-cam-btn{top:10px;right:10px}
 #cielo-ar-mode-btn{top:58px;right:10px;display:none;font-size:.95rem}
 #cielo-ar-mode-btn.show{display:flex}
-#cielo-ar-tilt-btn{top:10px;left:10px;display:none}
-#cielo-ar-tilt-btn.show{display:flex}
 #cielo-compass-btn{bottom:10px;left:10px}
 .cielo-compass-display{position:absolute;z-index:6;bottom:60px;left:10px;width:104px;height:104px;display:none;align-items:center;justify-content:center}
 .cielo-compass-display.show{display:flex}
@@ -1518,11 +1517,11 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
   <div class="cielo-map-wrap">
     <video class="cielo-ar-video" id="cielo-ar-video" playsinline autoplay muted></video>
     <div id="celestial-map"></div>
+    <canvas id="cielo-planet-labels"></canvas>
     <div class="cielo-loading" id="cielo-loading"><div class="carta-loading-ring"></div><p>Alineando las estrellas…</p></div>
     <button class="cielo-ar-toggle" id="cielo-ar-cam-btn" onclick="cieloToggleAR()" title="Modo Realidad Aumentada" aria-label="Modo Realidad Aumentada">📷</button>
     <button class="cielo-ar-toggle" id="cielo-ar-mode-btn" onclick="cieloToggleARMode()" title="Cambiar entre modo celular y laptop/PC" aria-label="Cambiar entre modo celular y laptop">📱</button>
-    <button class="cielo-ar-toggle" id="cielo-ar-tilt-btn" onclick="cieloToggleTilt()" title="Activar: el cielo sigue el movimiento de tu teléfono" aria-label="Activar seguimiento por movimiento del teléfono">🎯</button>
-    <button class="cielo-ar-toggle" id="cielo-compass-btn" onclick="cieloToggleCompass()" title="Brújula (solo referencia, no mueve el mapa)" aria-label="Mostrar brújula de referencia">🧭</button>
+    <button class="cielo-ar-toggle" id="cielo-compass-btn" onclick="cieloToggleCompass()" title="Activar: el cielo sigue hacia dónde apuntás el teléfono" aria-label="Activar brújula y seguimiento del cielo">🧭</button>
     <div class="cielo-compass-display" id="cielo-compass-display">
       <div class="cielo-compass-dial" id="cielo-compass-dial">
         <span class="cc-n">N</span><span class="cc-e">E</span><span class="cc-s">S</span><span class="cc-o">O</span>
@@ -1539,7 +1538,7 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
       <span class="cielo-ar-slider-label">Opacidad</span>
     </div>
     <div class="cielo-ar-slider cielo-ar-slider-right" id="cielo-ar-slider-cal">
-      <div class="cielo-ar-slider-track"><input type="range" min="-45" max="45" value="0" oninput="cieloARSetCalibration(this.value)" aria-label="Calibración vertical"></div>
+      <div class="cielo-ar-slider-track"><input type="range" min="-45" max="45" value="0" oninput="cieloARSetCalibration(this.value)" aria-label="Calibración de la brújula"></div>
       <span class="cielo-ar-slider-label">Calibrar</span>
     </div>
     <p class="cielo-ar-status" id="cielo-ar-status"></p>
@@ -4580,6 +4579,16 @@ function cieloSizeMap(){
   const s=Math.ceil(Math.sqrt(w*w+h*h)/CIELO_ZOOM_OUT_MIN*1.08)+40;
   map.style.width=s+'px';
   map.style.height=s+'px';
+  const lbl=$c('cielo-planet-labels');
+  if(lbl){
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    lbl.style.width=s+'px';
+    lbl.style.height=s+'px';
+    lbl.width=Math.max(1,Math.round(s*dpr));
+    lbl.height=Math.max(1,Math.round(s*dpr));
+    const lctx=lbl.getContext('2d');
+    lctx.setTransform(dpr,0,0,dpr,0,0);
+  }
 }
 // Mínimo factor de zoom-out permitido (relativo al encuadre "ajustado" = 1).
 // Con esto garantizamos que, aunque el usuario aleje el zoom hasta este límite,
@@ -4620,15 +4629,11 @@ function cerrarCielo(){
 }
 
 // ═══════════════════════════════════════
-// CIELO — Modo AR (cámara + inclinación)
+// CIELO — Modo AR (cámara) + Brújula que apunta el mapa
 // Capa aditiva: no modifica la lógica astronómica existente (zenith/skyview/drag).
-// Usa Celestial.rotate() —la misma API que ya usa el arrastre manual— para
-// desplazar la vista según la inclinación del teléfono, en vez de pelear
-// contra el sistema de coordenadas real del mapa.
 // ═══════════════════════════════════════
 let cieloARActive=false, cieloARStream=null, cieloARForceMode=null;
-let cieloTiltActive=false, cieloTiltHandler=null, cieloTiltLastBeta=null, cieloTiltLastHeading=null;
-let cieloARStatusTimer=null, cieloARCalLast=0;
+let cieloARStatusTimer=null, cieloCompassOffset=0;
 
 function cieloARShowStatus(msg,persist){
   const el=$c('cielo-ar-status'); if(!el)return;
@@ -4662,17 +4667,14 @@ function cieloToggleARMode(){
 function cieloApplyARModeUI(){
   const mode=cieloAREffectiveMode();
   const video=$c('cielo-ar-video');
-  const tiltBtn=$c('cielo-ar-tilt-btn');
   if(mode==='laptop'){
     // Espejo horizontal: en laptop la cámara es frontal, así que se comporta
     // visualmente como un espejo (igual que cualquier videollamada).
     if(video) video.style.transform='scaleX(-1)';
-    if(tiltBtn){ tiltBtn.classList.remove('show'); if(cieloTiltActive) cieloStopTilt(); }
-    cieloARShowStatus('Modo Laptop/PC: cámara frontal sin seguimiento por inclinación — muévete por el cielo arrastrando con el mouse.',true);
+    cieloARShowStatus('Modo Laptop/PC: cámara frontal — muévete por el cielo arrastrando con el mouse.',true);
   } else {
     if(video) video.style.transform='';
-    if(tiltBtn) tiltBtn.classList.add('show');
-    cieloARShowStatus('Modo Celular: toca el ícono 🎯 para que el cielo siga el movimiento de tu teléfono (arriba/abajo e izquierda/derecha).',true);
+    cieloARShowStatus('Modo Celular: toca el ícono 🧭 para que el cielo siga hacia dónde apuntás el teléfono.',true);
   }
 }
 
@@ -4710,93 +4712,28 @@ async function cieloToggleAR(){
 }
 
 function cieloStopAR(){
-  cieloStopTilt();
   if(cieloARStream){ cieloARStream.getTracks().forEach(t=>t.stop()); cieloARStream=null; }
   const video=$c('cielo-ar-video'); if(video){ video.classList.remove('show'); video.srcObject=null; video.style.transform=''; }
   cieloARActive=false;
   const camBtn=$c('cielo-ar-cam-btn'); if(camBtn)camBtn.classList.remove('active');
   const modeBtn=$c('cielo-ar-mode-btn'); if(modeBtn)modeBtn.classList.remove('show');
-  const tiltBtn=$c('cielo-ar-tilt-btn'); if(tiltBtn)tiltBtn.classList.remove('show','active');
   const so=$c('cielo-ar-slider-opacity'); if(so)so.classList.remove('show');
   const sc=$c('cielo-ar-slider-cal'); if(sc)sc.classList.remove('show');
   const mapEl=$c('celestial-map'); if(mapEl) mapEl.style.opacity='';
   try{ if(cieloLoaded) Celestial.apply({background:{fill:'#07071A',opacity:1}}); }catch(e){}
 }
 
-async function cieloToggleTilt(){
-  if(!cieloARActive)return;
-  if(cieloTiltActive){ cieloStopTilt(); return; }
-  if(typeof DeviceOrientationEvent!=='undefined' && typeof DeviceOrientationEvent.requestPermission==='function'){
-    try{
-      const res=await DeviceOrientationEvent.requestPermission();
-      if(res!=='granted'){ cieloARShowStatus('Permiso de sensores de movimiento denegado.',true); return; }
-    }catch(e){ cieloARShowStatus('No se pudo solicitar permiso de movimiento.',true); return; }
-  } else if(!('DeviceOrientationEvent' in window)){
-    cieloARShowStatus('Este dispositivo no reporta sensores de orientación.',true);
-    return;
-  }
-  cieloTiltLastBeta=null;
-  cieloTiltLastHeading=null;
-  cieloTiltHandler=function(ev){
-    if(ev.beta===null||ev.beta===undefined)return;
-    // Heading (giro izquierda/derecha): igual criterio que la brújula —
-    // usa webkitCompassHeading en iOS, o 360-alpha en Android/otros.
-    let heading=null;
-    if(typeof ev.webkitCompassHeading==='number' && !isNaN(ev.webkitCompassHeading)) heading=ev.webkitCompassHeading;
-    else if(typeof ev.alpha==='number' && !isNaN(ev.alpha)) heading=360-ev.alpha;
-    if(cieloTiltLastBeta===null){
-      cieloTiltLastBeta=ev.beta;
-      if(heading!==null) cieloTiltLastHeading=heading;
-      return;
-    }
-    const deltaBeta=ev.beta-cieloTiltLastBeta;
-    cieloTiltLastBeta=ev.beta;
-    let deltaHeading=0;
-    if(heading!==null){
-      if(cieloTiltLastHeading!==null){
-        deltaHeading=heading-cieloTiltLastHeading;
-        if(deltaHeading>180) deltaHeading-=360;
-        if(deltaHeading<-180) deltaHeading+=360;
-      }
-      cieloTiltLastHeading=heading;
-    }
-    if(Math.abs(deltaBeta)<0.06 && Math.abs(deltaHeading)<0.06)return;
-    try{
-      const cur=Celestial.rotate();
-      if(cur && Array.isArray(cur.center)){
-        const lat=Math.max(-89,Math.min(89,cur.center[1]+deltaBeta));
-        const lon=cur.center[0]-deltaHeading;
-        Celestial.rotate({center:[lon,lat,cur.center[2]]});
-      }
-    }catch(e){}
-  };
-  // El heading (giro izquierda/derecha) necesita el sensor "absoluto" (fusión con
-  // brújula/magnetómetro) para no quedar mudo en celulares sin giroscopio — el mismo
-  // motivo por el que la brújula ya usa 'deviceorientationabsolute' cuando existe.
-  // Con solo 'deviceorientation' el eje vertical (beta) sí llegaba, pero alpha podía
-  // quedar en null o sin actualizarse, por eso girar el teléfono no movía el mapa.
-  const tiltEvName=('ondeviceorientationabsolute' in window)?'deviceorientationabsolute':'deviceorientation';
-  window.addEventListener(tiltEvName,cieloTiltHandler,true);
-  cieloTiltActive=true;
-  $c('cielo-ar-tilt-btn').classList.add('active');
-  cieloARShowStatus('Mueve el teléfono hacia arriba, abajo, izquierda o derecha para recorrer el cielo. Usa el slider derecho si notas desalineación vertical.');
-}
-
-function cieloStopTilt(){
-  if(cieloTiltHandler){
-    window.removeEventListener('deviceorientationabsolute',cieloTiltHandler,true);
-    window.removeEventListener('deviceorientation',cieloTiltHandler,true);
-    cieloTiltHandler=null;
-  }
-  cieloTiltActive=false;
-  const btn=$c('cielo-ar-tilt-btn'); if(btn)btn.classList.remove('active');
-}
-
 // ═══════════════════════════════════════
-// BRÚJULA — muestra el norte real como en una app de GPS (no depende del modo AR,
-// funciona en cualquier momento sobre el mapa). Toma el "heading" del sensor de
-// orientación del dispositivo y rota el disco de la brújula para que la letra "N"
-// siempre señale hacia el norte verdadero respecto a hacia dónde apunta el teléfono.
+// BRÚJULA — funciona en cualquier momento sobre "Mapa del Cielo" (no depende del
+// modo AR/cámara). Mientras está activa hace DOS cosas con cada lectura del sensor
+// de orientación del teléfono:
+//  1) rota el disco de la brújula para que la "N" señale el norte real (como antes).
+//  2) convierte hacia dónde apunta físicamente el teléfono (acimut = heading de la
+//     brújula, altura = inclinación real calculada con beta+gamma) a coordenadas
+//     del cielo (AR/Dec, según tu ubicación y la hora actual) con Astronomy Engine,
+//     y centra el mapa exactamente ahí — así el cielo "apunta" a donde apunta el
+//     teléfono, en vez de solo desplazarse a pasitos relativos como antes.
+// Al desactivarla, el mapa se queda quieto donde haya quedado.
 // ═══════════════════════════════════════
 let cieloCompassActive=false, cieloCompassHandler=null;
 async function cieloToggleCompass(){
@@ -4807,7 +4744,7 @@ async function cieloToggleCompass(){
       if(res!=='granted'){ cieloARShowStatus('Permiso de sensores de movimiento denegado.',true); return; }
     }catch(e){ cieloARShowStatus('No se pudo solicitar permiso de movimiento.',true); return; }
   } else if(!('DeviceOrientationEvent' in window)){
-    cieloARShowStatus('Este dispositivo no reporta sensores de orientación, así que no se puede mostrar la brújula.',true);
+    cieloARShowStatus('Este dispositivo no reporta sensores de orientación, así que no se puede seguir el cielo.',true);
     return;
   }
   cieloCompassHandler=function(ev){
@@ -4822,12 +4759,36 @@ async function cieloToggleCompass(){
     if(heading===null)return;
     heading=((heading%360)+360)%360;
     cieloUpdateCompassUI(heading);
+    if(!cieloLoaded || typeof Celestial==='undefined' || !Celestial.rotate || typeof Astronomy==='undefined')return;
+    try{
+      // Altura real hacia donde apunta el teléfono a partir de beta/gamma: esta fórmula
+      // (a diferencia de usar beta solo) sí es correcta con el teléfono sostenido en
+      // vertical apuntando al cielo, que es como se usa esta función en la práctica.
+      const beta=(typeof ev.beta==='number'&&!isNaN(ev.beta))?ev.beta:90;
+      const gamma=(typeof ev.gamma==='number'&&!isNaN(ev.gamma))?ev.gamma:0;
+      const betaRad=beta*Math.PI/180, gammaRad=gamma*Math.PI/180;
+      let altitude=Math.asin(-Math.cos(betaRad)*Math.cos(gammaRad))*180/Math.PI;
+      altitude=Math.max(-89.9,Math.min(89.9,altitude)); // evita la singularidad exacta del cenit
+      const azimuth=((heading+cieloCompassOffset)%360+360)%360;
+      const now=new Date();
+      const time=Astronomy.MakeTime(now);
+      const observer=new Astronomy.Observer(cieloLat,cieloLon,0);
+      const sphere=new Astronomy.Spherical(altitude,azimuth,1);
+      const vec=Astronomy.VectorFromHorizon(sphere,time,'normal');
+      const rot=Astronomy.Rotation_HOR_EQD(time,observer);
+      const eqVec=Astronomy.RotateVector(rot,vec);
+      const eq=Astronomy.EquatorFromVector(eqVec);
+      const cur=Celestial.rotate();
+      const roll=(cur && Array.isArray(cur.center))?cur.center[2]:0;
+      Celestial.rotate({center:[eq.ra*15,eq.dec,roll]});
+    }catch(e){}
   };
   const evName=('ondeviceorientationabsolute' in window)?'deviceorientationabsolute':'deviceorientation';
   window.addEventListener(evName,cieloCompassHandler,true);
   cieloCompassActive=true;
   const btn=$c('cielo-compass-btn'); if(btn)btn.classList.add('active');
   const disp=$c('cielo-compass-display'); if(disp)disp.classList.add('show');
+  cieloARShowStatus('El cielo ahora sigue hacia dónde apuntás el teléfono. Tocá la brújula otra vez para dejarlo fijo donde esté.');
 }
 function cieloStopCompass(){
   if(cieloCompassHandler){
@@ -4854,18 +4815,10 @@ function cieloARSetOpacity(val){
   const mapEl=$c('celestial-map'); if(mapEl) mapEl.style.opacity=(val/100);
 }
 
+// Corrige un posible desvío magnético/de montaje del sensor del teléfono: se suma
+// al heading real antes de convertirlo a coordenadas del cielo en cieloToggleCompass.
 function cieloARSetCalibration(val){
-  val=parseFloat(val);
-  const delta=val-cieloARCalLast;
-  cieloARCalLast=val;
-  if(!delta)return;
-  try{
-    const cur=Celestial.rotate();
-    if(cur && Array.isArray(cur.center)){
-      const lat=Math.max(-89,Math.min(89,cur.center[1]+delta));
-      Celestial.rotate({center:[cur.center[0],lat,cur.center[2]]});
-    }
-  }catch(e){}
+  cieloCompassOffset=parseFloat(val)||0;
 }
 function cieloStartClock(){
   if(cieloClockTimer)clearInterval(cieloClockTimer);
@@ -4886,6 +4839,21 @@ function cieloLoadScripts(){
   }
   next();
 }
+// Metadatos compartidos de cada planeta: el círculo de color (disco) que dibuja
+// d3-celestial usa esto, y nuestra propia capa de etiquetas (símbolo + nombre,
+// dibujados aparte para que nunca queden encima del planeta) también.
+const CIELO_PLANET_META={
+  sol:{symbol:'☉',fill:'#FFD98A',size:18,bodyId:'Sun',    name:'Sol'},
+  mer:{symbol:'☿',fill:'#BFB6AC',size:8, bodyId:'Mercury',name:'Mercurio'},
+  ven:{symbol:'♀',fill:'#F5E8C9',size:11,bodyId:'Venus',  name:'Venus'},
+  lun:{symbol:'☾',fill:'#F0EDE4',size:16,bodyId:'Moon',   name:'Luna'},
+  mar:{symbol:'♂',fill:'#E27B4F',size:9, bodyId:'Mars',   name:'Marte'},
+  jup:{symbol:'♃',fill:'#E8C28A',size:13,bodyId:'Jupiter',name:'Júpiter'},
+  sat:{symbol:'♄',fill:'#E3D2A0',size:12,bodyId:'Saturn', name:'Saturno'},
+  ura:{symbol:'♅',fill:'#8FD8E0',size:9, bodyId:'Uranus', name:'Urano'},
+  nep:{symbol:'♆',fill:'#6E8FE0',size:9, bodyId:'Neptune',name:'Neptuno'},
+  plu:{symbol:'♇',fill:'#C9B8A0',size:6, bodyId:'Pluto',  name:'Plutón'}
+};
 function cieloBuildConfig(){
   return {
     width:0,projection:'stereographic',transform:'equatorial',center:null,follow:'zenith',
@@ -4910,21 +4878,15 @@ function cieloBuildConfig(){
     horizon:{show:cieloShow.horizon,stroke:'#C9A84C',width:1.2,fill:'#000000',opacity:.55},
     daylight:{show:false},
     planets:{show:true,which:['ter','sol','mer','ven','lun','mar','jup','sat','ura','nep','plu'],
-      symbols:{
-        sol:{symbol:'☉',letter:'S', fill:'#FFD98A',size:18},
-        mer:{symbol:'☿',letter:'Me',fill:'#BFB6AC',size:8},
-        ven:{symbol:'♀',letter:'V', fill:'#F5E8C9',size:11},
-        lun:{symbol:'☾',letter:'L', fill:'#F0EDE4',size:16},
-        mar:{symbol:'♂',letter:'Ma',fill:'#E27B4F',size:9},
-        jup:{symbol:'♃',letter:'J', fill:'#E8C28A',size:13},
-        sat:{symbol:'♄',letter:'Sa',fill:'#E3D2A0',size:12},
-        ura:{symbol:'♅',letter:'U', fill:'#8FD8E0',size:9},
-        nep:{symbol:'♆',letter:'N', fill:'#6E8FE0',size:9},
-        plu:{symbol:'♇',letter:'P', fill:'#C9B8A0',size:6}
-      },
+      symbols:CIELO_PLANET_META,
       symbolStyle:{fill:'#F0DDA8',opacity:1,stroke:'#07071A',width:1},
-      symbolType:'disk',names:true,
-      nameStyle:{fill:'#E8D5A3',font:"14px 'Cormorant Garamond', Georgia, serif",align:'left',baseline:'middle',offset:12},namesType:'es'}
+      symbolType:'disk',
+      // El símbolo astrológico y el nombre de cada planeta NO se piden aquí: d3-celestial
+      // los dibuja pegados al punto central del disco (a veces montados encima), y esa
+      // posición no es configurable. Los dibujamos aparte en cieloDrawPlanetLabels(),
+      // siempre debajo del disco y sin superponerse, en un canvas propio por encima del mapa.
+      names:false,
+      nameStyle:{fill:'#E8D5A3',font:"14px 'Cormorant Garamond', Georgia, serif",align:'center',baseline:'middle'},namesType:'es'}
   };
 }
 function cieloInit(){
@@ -4998,6 +4960,7 @@ function cieloInit(){
   }
   cieloLoaded=true;cieloScriptsLoading=false;
   cieloSetupMapClick();
+  cieloStartPlanetLabelLoop();
   if(navigator.geolocation){
     navigator.geolocation.getCurrentPosition(pos=>{
       cieloLat=pos.coords.latitude;cieloLon=pos.coords.longitude;cieloLocName='tu ubicación actual';
@@ -5084,6 +5047,7 @@ function cieloSwitchTab(tab){
   if(tab==='mapa'){
     cieloSizeMap();
     if(cieloLoaded)cieloRefreshSky();
+    cieloStartPlanetLabelLoop();
   }
   if(tab==='calendario'&&!cieloCalYearInit){
     cieloCalYearInit=true;
@@ -5110,9 +5074,58 @@ function cieloFmtTime(d){
 // (align:'left', baseline:'middle', ~18px), para que un click sobre ese texto cuente
 // igual que un click sobre el símbolo del planeta.
 function cieloPlanetLabelBox(pt,name){
-  const fontSize=18, gap=10;
-  const textW=Math.max(24,(name||'').length*fontSize*0.5);
-  return{x0:pt[0]-14,x1:pt[0]+gap+textW,y0:pt[1]-fontSize*0.75,y1:pt[1]+fontSize*0.75};
+  // El símbolo y el nombre ahora se dibujan centrados debajo del disco (ver
+  // cieloDrawPlanetLabels/CIELO_PLANET_LABEL_GAP1-2), así que el rectángulo clicable
+  // cubre esa franja vertical debajo del punto, no un texto a la derecha.
+  const textW=Math.max(28,(name||'').length*13*0.62);
+  const halfW=Math.max(16,textW/2);
+  return{x0:pt[0]-halfW,x1:pt[0]+halfW,y0:pt[1]-6,y1:pt[1]+CIELO_PLANET_LABEL_GAP2+13};
+}
+// Separación en píxeles de pantalla (no en grados de cielo) entre el punto real del
+// planeta y su símbolo/nombre: así SIEMPRE quedan debajo del disco sin superponerse,
+// sin importar el zoom o hacia dónde esté rotado el mapa (un offset en declinación no
+// serviría: tras arrastrar/rotar la vista, "más al sur" ya no es necesariamente "más
+// abajo en pantalla").
+const CIELO_PLANET_LABEL_GAP1=24, CIELO_PLANET_LABEL_GAP2=41;
+function cieloDrawPlanetLabels(){
+  const cv=$c('cielo-planet-labels');
+  if(!cv||typeof Celestial==='undefined'||!Celestial.mapProjection)return;
+  const w=cv.clientWidth,h=cv.clientHeight;
+  if(!w||!h)return;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,w,h);
+  const now=new Date();
+  ctx.textAlign='center';
+  ctx.textBaseline='top';
+  for(const shortId in CIELO_PLANET_META){
+    const meta=CIELO_PLANET_META[shortId];
+    const radec=cieloBodyRaDecNow(meta.bodyId,now);
+    if(!radec)continue;
+    let pt;
+    try{ pt=Celestial.mapProjection([radec.ra,radec.dec]); }catch(e){continue;}
+    if(!pt||isNaN(pt[0])||isNaN(pt[1]))continue;
+    if(pt[0]<-40||pt[0]>w+40||pt[1]<-40||pt[1]>h+40)continue;
+    ctx.fillStyle=meta.fill;
+    ctx.font="15px 'DejaVu Sans Mono', sans-serif";
+    ctx.fillText(meta.symbol,pt[0],pt[1]+CIELO_PLANET_LABEL_GAP1);
+    ctx.font="13px 'Cormorant Garamond', Georgia, serif";
+    ctx.fillText(meta.name,pt[0],pt[1]+CIELO_PLANET_LABEL_GAP2);
+  }
+}
+let cieloPlanetLabelLoopActive=false;
+function cieloPlanetLabelLoop(){
+  const cv=$c('cielo-planet-labels'), overlay=$c('cielo-overlay');
+  if(!cv||!overlay||!overlay.classList.contains('show')||!cieloLoaded||cv.offsetParent===null){
+    cieloPlanetLabelLoopActive=false;
+    return;
+  }
+  cieloDrawPlanetLabels();
+  requestAnimationFrame(cieloPlanetLabelLoop);
+}
+function cieloStartPlanetLabelLoop(){
+  if(cieloPlanetLabelLoopActive)return;
+  cieloPlanetLabelLoopActive=true;
+  requestAnimationFrame(cieloPlanetLabelLoop);
 }
 function cieloBodyRaDecNow(bodyId,date){
   try{
@@ -5608,6 +5621,12 @@ setupReveal();
 </script>
   <script>
 if ('serviceWorker' in navigator) {
+  // 'controllerchange' también se dispara en la primerísima instalación (cuando la
+  // página pasa de "sin service worker" a "con uno"), no solo en una actualización real.
+  // Si hadController ya era true al cargar, es porque una visita anterior YA dejó un
+  // service worker activo — en ese caso, un controllerchange posterior sí es una
+  // actualización real y conviene recargar. En la primera visita jamás recargamos solos.
+  const hadController=!!navigator.serviceWorker.controller;
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('service-worker.js').then(reg=>{ try{reg.update();}catch(e){} });
   });
@@ -5616,6 +5635,7 @@ if ('serviceWorker' in navigator) {
   // que alguien la cierre y reabra manualmente.
   let cieloSWRefreshed=false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if(!hadController)return;
     if(cieloSWRefreshed)return;
     cieloSWRefreshed=true;
     location.reload();
