@@ -1520,8 +1520,8 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
     <div class="cielo-loading" id="cielo-loading"><div class="carta-loading-ring"></div><p>Alineando las estrellas…</p></div>
     <button class="cielo-ar-toggle" id="cielo-ar-cam-btn" onclick="cieloToggleAR()" title="Modo Realidad Aumentada" aria-label="Modo Realidad Aumentada">📷</button>
     <button class="cielo-ar-toggle" id="cielo-ar-mode-btn" onclick="cieloToggleARMode()" title="Cambiar entre modo celular y laptop/PC" aria-label="Cambiar entre modo celular y laptop">📱</button>
-    <button class="cielo-ar-toggle" id="cielo-ar-tilt-btn" onclick="cieloToggleTilt()" title="Seguir inclinación del teléfono" aria-label="Seguir inclinación del teléfono">🧭</button>
-    <button class="cielo-ar-toggle" id="cielo-compass-btn" onclick="cieloToggleCompass()" title="Brújula" aria-label="Mostrar brújula">🧭</button>
+    <button class="cielo-ar-toggle" id="cielo-ar-tilt-btn" onclick="cieloToggleTilt()" title="Activar: el cielo sigue el movimiento de tu teléfono" aria-label="Activar seguimiento por movimiento del teléfono">🎯</button>
+    <button class="cielo-ar-toggle" id="cielo-compass-btn" onclick="cieloToggleCompass()" title="Brújula (solo referencia, no mueve el mapa)" aria-label="Mostrar brújula de referencia">🧭</button>
     <div class="cielo-compass-display" id="cielo-compass-display">
       <div class="cielo-compass-dial" id="cielo-compass-dial">
         <span class="cc-n">N</span><span class="cc-e">E</span><span class="cc-s">S</span><span class="cc-o">O</span>
@@ -4626,7 +4626,7 @@ function cerrarCielo(){
 // contra el sistema de coordenadas real del mapa.
 // ═══════════════════════════════════════
 let cieloARActive=false, cieloARStream=null, cieloARForceMode=null;
-let cieloTiltActive=false, cieloTiltHandler=null, cieloTiltLastBeta=null;
+let cieloTiltActive=false, cieloTiltHandler=null, cieloTiltLastBeta=null, cieloTiltLastHeading=null;
 let cieloARStatusTimer=null, cieloARCalLast=0;
 
 function cieloARShowStatus(msg,persist){
@@ -4671,7 +4671,7 @@ function cieloApplyARModeUI(){
   } else {
     if(video) video.style.transform='';
     if(tiltBtn) tiltBtn.classList.add('show');
-    cieloARShowStatus('Modo Celular: inclina el teléfono o usa el ícono de la brújula para seguir el cielo.',true);
+    cieloARShowStatus('Modo Celular: toca el ícono 🎯 para que el cielo siga el movimiento de tu teléfono (arriba/abajo e izquierda/derecha).',true);
   }
 }
 
@@ -4735,24 +4735,44 @@ async function cieloToggleTilt(){
     return;
   }
   cieloTiltLastBeta=null;
+  cieloTiltLastHeading=null;
   cieloTiltHandler=function(ev){
     if(ev.beta===null||ev.beta===undefined)return;
-    if(cieloTiltLastBeta===null){ cieloTiltLastBeta=ev.beta; return; }
-    const delta=ev.beta-cieloTiltLastBeta;
+    // Heading (giro izquierda/derecha): igual criterio que la brújula —
+    // usa webkitCompassHeading en iOS, o 360-alpha en Android/otros.
+    let heading=null;
+    if(typeof ev.webkitCompassHeading==='number' && !isNaN(ev.webkitCompassHeading)) heading=ev.webkitCompassHeading;
+    else if(typeof ev.alpha==='number' && !isNaN(ev.alpha)) heading=360-ev.alpha;
+    if(cieloTiltLastBeta===null){
+      cieloTiltLastBeta=ev.beta;
+      if(heading!==null) cieloTiltLastHeading=heading;
+      return;
+    }
+    const deltaBeta=ev.beta-cieloTiltLastBeta;
     cieloTiltLastBeta=ev.beta;
-    if(Math.abs(delta)<0.06)return;
+    let deltaHeading=0;
+    if(heading!==null){
+      if(cieloTiltLastHeading!==null){
+        deltaHeading=heading-cieloTiltLastHeading;
+        if(deltaHeading>180) deltaHeading-=360;
+        if(deltaHeading<-180) deltaHeading+=360;
+      }
+      cieloTiltLastHeading=heading;
+    }
+    if(Math.abs(deltaBeta)<0.06 && Math.abs(deltaHeading)<0.06)return;
     try{
       const cur=Celestial.rotate();
       if(cur && Array.isArray(cur.center)){
-        const lat=Math.max(-89,Math.min(89,cur.center[1]+delta));
-        Celestial.rotate({center:[cur.center[0],lat,cur.center[2]]});
+        const lat=Math.max(-89,Math.min(89,cur.center[1]+deltaBeta));
+        const lon=cur.center[0]-deltaHeading;
+        Celestial.rotate({center:[lon,lat,cur.center[2]]});
       }
     }catch(e){}
   };
   window.addEventListener('deviceorientation',cieloTiltHandler);
   cieloTiltActive=true;
   $c('cielo-ar-tilt-btn').classList.add('active');
-  cieloARShowStatus('Inclina el teléfono hacia arriba o abajo para recorrer el cielo. Usa el slider derecho si notas desalineación.');
+  cieloARShowStatus('Mueve el teléfono hacia arriba, abajo, izquierda o derecha para recorrer el cielo. Usa el slider derecho si notas desalineación vertical.');
 }
 
 function cieloStopTilt(){
