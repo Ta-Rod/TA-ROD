@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ta-rod · Tarot · Astrología · Chamanismo</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&family=Noto+Sans+Symbols&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#07071A">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,25 +14,25 @@
 <style>
 
 :root{
-  --abyss:#07071A;--dp:#120A2E;--gold:#C9A84C;--gl:#E8D5A3;--gd:#7A6230;
+  --abyss:rgba(7,7,26,.93);--abyss-solid:#07071A;--dp:#120A2E;--gold:#C9A84C;--gl:#E8D5A3;--gd:#7A6230;
   --tp:#E8D5A3;--ts:#9A8A6A;--tm:#5A5070;
   --br:rgba(201,168,76,0.15);--bb:rgba(201,168,76,0.4);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{background:var(--abyss);color:var(--tp);font-family:'Inter',sans-serif;font-weight:300;overflow-x:hidden;cursor:none}
+html{scroll-behavior:smooth;background:var(--abyss-solid)}
+body{background:var(--abyss-solid);color:var(--tp);font-family:'Inter',sans-serif;font-weight:300;overflow-x:hidden;cursor:none}
 
 /* CURSOR */
 #cur{position:fixed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);font-size:1.3rem;color:var(--gold);text-shadow:0 0 12px rgba(201,168,76,.7);transition:font-size .3s;user-select:none}
 #cur-ring{position:fixed;width:38px;height:38px;border:1px solid rgba(201,168,76,.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:transform .15s ease-out,width .3s,height .3s}
 
 /* BG CANVAS */
-#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.8}
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:1}
 
 /* SKETCH LAYER */
 .sketch-layer{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.sk{position:absolute;pointer-events:none;user-select:none;font-family:serif;color:rgba(201,168,76,.06);animation:skbr var(--dur,18s) ease-in-out infinite var(--del,0s)}
-@keyframes skbr{0%,100%{opacity:.4;transform:rotate(var(--r,0deg)) scale(1)}50%{opacity:1;transform:rotate(calc(var(--r,0deg) + 4deg)) scale(1.04)}}
+.sk{position:absolute;pointer-events:none;user-select:none;font-family:serif;color:rgba(201,168,76,.11);animation:skbr var(--dur,18s) ease-in-out infinite var(--del,0s)}
+@keyframes skbr{0%,100%{opacity:.5;transform:rotate(var(--r,0deg)) scale(1)}50%{opacity:1;transform:rotate(calc(var(--r,0deg) + 4deg)) scale(1.04)}}
 
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:1.4rem 4rem;background:linear-gradient(to bottom,rgba(7,7,26,.95),transparent);border-bottom:1px solid transparent;transition:border-color .3s,background .3s}
@@ -181,6 +181,8 @@ section{position:relative;z-index:1;padding:6rem 4rem}
 .ch-diag-btn{padding:.75rem 2rem;border:1px solid var(--bb);background:transparent;color:var(--gold);font-family:'Cormorant Garamond',serif;font-size:.95rem;font-style:italic;letter-spacing:.1em;cursor:pointer;transition:all .35s;opacity:.4;pointer-events:none}
 .ch-diag-btn.ready{opacity:1;pointer-events:all}
 .ch-diag-btn.ready:hover{background:rgba(201,168,76,.07);box-shadow:0 0 22px rgba(201,168,76,.14)}
+.ch-diag-reset{margin-left:.7rem;padding:.75rem 2rem;border:1px solid var(--br);background:transparent;color:var(--tm);font-family:'Cormorant Garamond',serif;font-size:.95rem;font-style:italic;letter-spacing:.06em;cursor:pointer;transition:all .3s}
+.ch-diag-reset:hover{border-color:var(--bb);color:var(--ts)}
 .ch-layout{display:grid;grid-template-columns:1fr 270px 1fr;gap:2.5rem;align-items:center}
 .ch-col{display:flex;flex-direction:column;gap:1.1rem}
 .chi{padding:.9rem 1.1rem;border:1px solid var(--br);background:rgba(201,168,76,.02);cursor:pointer;transition:all .32s;position:relative;overflow:hidden}
@@ -933,7 +935,7 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
     </div>
     <div class="carta-btns-row rv">
       <button class="carta-btn" onclick="calcCarta()">✦ Calcular mi Carta Natal ✦</button>
-      <button class="carta-btn-clear" onclick="clearCarta()">✕ Limpiar</button>
+      <button class="carta-btn-clear" onclick="clearCarta()">↺ Reiniciar</button>
       <button class="carta-btn-reset" onclick="resetCarta()">↺ Nueva Consulta</button>
     </div>
     <div class="carta-loading" id="carta-loading">
@@ -1153,6 +1155,7 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
       </div>
       <p class="ch-diag-hint" id="ch-diag-hint">0 / 3 seleccionados</p>
       <button class="ch-diag-btn" id="ch-diag-btn" onclick="runDiag()">✦ Revelar mi Estado Energético ✦</button>
+      <button class="ch-diag-reset" id="ch-diag-reset" onclick="resetDiag()">↺ Reiniciar selección</button>
     </div>
 
     <!-- MAPA CORPORAL + TARJETAS -->
@@ -1989,26 +1992,26 @@ window.addEventListener('scroll',()=>$('main-nav').classList.toggle('sc',scrollY
 const bgC=$('bg-canvas'),bgX=bgC.getContext('2d');
 // Zodiac constellations — unit coords (0-1)
 const CONS=[
-  {name:'♈ Aries',   col:'rgba(255,130,70,', stars:[{x:.50,y:.38},{x:.53,y:.42},{x:.57,y:.44},{x:.60,y:.40}], lines:[[0,1],[1,2],[2,3]]},
-  {name:'♉ Tauro',   col:'rgba(150,210,100,',stars:[{x:.12,y:.55},{x:.16,y:.52},{x:.19,y:.50},{x:.22,y:.52},{x:.18,y:.47},{x:.24,y:.48},{x:.21,y:.44}],lines:[[0,1],[1,2],[2,3],[2,4],[4,5],[4,6]]},
-  {name:'♊ Géminis', col:'rgba(100,190,255,',stars:[{x:.72,y:.18},{x:.75,y:.22},{x:.78,y:.26},{x:.80,y:.18},{x:.83,y:.23},{x:.86,y:.28}],lines:[[0,1],[1,2],[3,4],[4,5],[1,4]]},
-  {name:'♋ Cáncer',  col:'rgba(160,160,255,',stars:[{x:.30,y:.20},{x:.33,y:.24},{x:.37,y:.22},{x:.34,y:.28}],lines:[[0,1],[1,2],[1,3]]},
-  {name:'♌ Leo',     col:'rgba(255,195,50,', stars:[{x:.62,y:.30},{x:.65,y:.27},{x:.68,y:.25},{x:.71,y:.28},{x:.70,y:.33},{x:.66,y:.36},{x:.63,y:.33},{x:.68,y:.39}],lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,0],[4,7]]},
-  {name:'♍ Virgo',   col:'rgba(120,210,140,',stars:[{x:.85,y:.48},{x:.88,y:.44},{x:.90,y:.40},{x:.92,y:.45},{x:.89,y:.50},{x:.86,y:.55},{x:.90,y:.57}],lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0],[4,6]]},
-  {name:'♎ Libra',   col:'rgba(190,140,255,',stars:[{x:.20,y:.73},{x:.24,y:.68},{x:.28,y:.65},{x:.26,y:.73},{x:.22,y:.77}],lines:[[0,1],[1,2],[2,3],[3,4],[4,0],[1,3]]},
-  {name:'♏ Escorpio',col:'rgba(255,75,75,',  stars:[{x:.45,y:.60},{x:.48,y:.63},{x:.52,y:.65},{x:.55,y:.62},{x:.57,y:.58},{x:.60,y:.62},{x:.63,y:.66},{x:.61,y:.71},{x:.57,y:.73}],lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8]]},
-  {name:'♐ Sagitario',col:'rgba(255,155,55,',stars:[{x:.75,y:.68},{x:.78,y:.64},{x:.82,y:.62},{x:.85,y:.66},{x:.83,y:.72},{x:.80,y:.76},{x:.77,y:.73}],lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,0],[1,3]]},
-  {name:'♑ Capricornio',col:'rgba(140,195,165,',stars:[{x:.08,y:.30},{x:.11,y:.27},{x:.14,y:.25},{x:.17,y:.28},{x:.15,y:.33},{x:.11,y:.35}],lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0]]},
-  {name:'♒ Acuario', col:'rgba(80,195,255,', stars:[{x:.38,y:.79},{x:.42,y:.75},{x:.46,y:.77},{x:.50,y:.73},{x:.53,y:.75},{x:.44,y:.81},{x:.48,y:.83}],lines:[[0,1],[1,2],[2,3],[3,4],[1,5],[5,6],[6,3]]},
-  {name:'♓ Piscis',  col:'rgba(150,150,255,',stars:[{x:.65,y:.80},{x:.68,y:.76},{x:.71,y:.80},{x:.70,y:.85},{x:.74,y:.82},{x:.77,y:.78},{x:.75,y:.84}],lines:[[0,1],[1,2],[2,3],[4,5],[5,6],[6,4],[2,4]]}
+  {name:'♈ Aries',   col:'rgba(255,130,70,', stars:[{x:.500,y:.380},{x:.520,y:.395},{x:.545,y:.390},{x:.570,y:.360}], lines:[[0,1],[1,2],[2,3]]},
+  {name:'♉ Tauro',   col:'rgba(150,210,100,',stars:[{x:.120,y:.550},{x:.100,y:.520},{x:.085,y:.495},{x:.145,y:.520},{x:.165,y:.500},{x:.110,y:.460},{x:.115,y:.450}],lines:[[0,1],[1,2],[0,3],[3,4],[1,5],[5,6]]},
+  {name:'♊ Géminis', col:'rgba(100,190,255,',stars:[{x:.720,y:.180},{x:.745,y:.190},{x:.725,y:.220},{x:.730,y:.260},{x:.750,y:.225},{x:.755,y:.265}],lines:[[0,1],[0,2],[2,3],[1,4],[4,5]]},
+  {name:'♋ Cáncer',  col:'rgba(160,160,255,',stars:[{x:.300,y:.200},{x:.320,y:.225},{x:.340,y:.210},{x:.320,y:.250}],lines:[[0,1],[1,2],[1,3]]},
+  {name:'♌ Leo',     col:'rgba(255,195,50,', stars:[{x:.620,y:.390},{x:.615,y:.360},{x:.625,y:.335},{x:.645,y:.320},{x:.665,y:.330},{x:.710,y:.360},{x:.680,y:.390}],lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,0]]},
+  {name:'♍ Virgo',   col:'rgba(120,210,140,',stars:[{x:.850,y:.570},{x:.840,y:.530},{x:.830,y:.500},{x:.860,y:.480},{x:.880,y:.510},{x:.815,y:.450},{x:.870,y:.460}],lines:[[0,1],[1,2],[2,3],[3,4],[2,5],[3,6]]},
+  {name:'♎ Libra',   col:'rgba(190,140,255,',stars:[{x:.200,y:.730},{x:.240,y:.710},{x:.240,y:.760},{x:.200,y:.780},{x:.180,y:.750}],lines:[[0,1],[1,2],[2,3],[3,4],[4,0],[1,3]]},
+  {name:'♏ Escorpio',col:'rgba(255,75,75,',  stars:[{x:.450,y:.580},{x:.480,y:.600},{x:.510,y:.630},{x:.530,y:.670},{x:.525,y:.710},{x:.500,y:.740},{x:.470,y:.750}],lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,6]]},
+  {name:'♐ Sagitario',col:'rgba(255,155,55,',stars:[{x:.750,y:.680},{x:.780,y:.695},{x:.800,y:.710},{x:.830,y:.700},{x:.810,y:.660},{x:.840,y:.670},{x:.850,y:.700}],lines:[[0,1],[1,2],[2,3],[1,4],[4,5],[5,6],[6,3]]},
+  {name:'♑ Capricornio',col:'rgba(140,195,165,',stars:[{x:.080,y:.300},{x:.110,y:.270},{x:.140,y:.265},{x:.170,y:.280},{x:.180,y:.310},{x:.130,y:.330}],lines:[[0,1],[1,2],[2,3],[3,4],[4,5],[5,0]]},
+  {name:'♒ Acuario', col:'rgba(80,195,255,', stars:[{x:.380,y:.790},{x:.400,y:.765},{x:.420,y:.770},{x:.400,y:.820}],lines:[[0,1],[1,2],[1,3]]},
+  {name:'♓ Piscis',  col:'rgba(150,150,255,',stars:[{x:.650,y:.800},{x:.680,y:.780},{x:.700,y:.820},{x:.730,y:.790},{x:.760,y:.810}],lines:[[0,1],[1,2],[2,3],[3,4]]}
 ];
 let bgStars=[],cstates=[],shoots=[],shootT=0,bgT=0;
 const cstateInit=()=>CONS.map((_,i)=>({a:0,ta:0,ph:Math.random()*6.28,sp:.0003+Math.random()*.0002,
   next:i*3500+Math.random()*7000,vis:false,dx:(Math.random()-.5)*.0018,dy:(Math.random()-.5)*.001,ox:0,oy:0}));
 function initBG(){
   bgC.width=innerWidth;bgC.height=innerHeight;
-  bgStars=Array.from({length:200},()=>({x:Math.random()*bgC.width,y:Math.random()*bgC.height,
-    r:Math.random()*1.1+.2,a:Math.random()*.4+.05,sp:Math.random()*.0014+.0004,ph:Math.random()*6.28}));
+  bgStars=Array.from({length:220},()=>({x:Math.random()*bgC.width,y:Math.random()*bgC.height,
+    r:Math.random()*1.2+.25,a:Math.random()*.55+.12,sp:Math.random()*.0014+.0004,ph:Math.random()*6.28}));
   cstates=cstateInit();
 }
 function spawnShoot(){
@@ -2029,7 +2032,7 @@ function animBG(t){
   // constellations
   CONS.forEach((c,ci)=>{
     const st=cstates[ci];
-    if(now>st.next){st.vis=!st.vis;st.ta=st.vis?(.10+Math.random()*.09):0;st.next=now+(st.vis?9000+Math.random()*11000:4000+Math.random()*6000)}
+    if(now>st.next){st.vis=!st.vis;st.ta=st.vis?(.18+Math.random()*.14):0;st.next=now+(st.vis?9000+Math.random()*11000:4000+Math.random()*6000)}
     st.a+=(st.ta-st.a)*.007;
     if(st.a<.003)return;
     st.ox+=st.dx;st.oy+=st.dy;
@@ -2126,8 +2129,8 @@ requestAnimationFrame(drawZodiac);
     const rot=((Math.random()*40)-20).toFixed(1);
     const dur=(14+Math.random()*15).toFixed(1);
     const del=(Math.random()*-20).toFixed(1);
-    const opLo=(Math.random()*.035+.015).toFixed(3);
-    const opHi=(Math.random()*.065+.045).toFixed(3);
+    const opLo=(Math.random()*.05+.03).toFixed(3);
+    const opHi=(Math.random()*.09+.08).toFixed(3);
     d.textContent=syms[(idx++)%syms.length];
     d.style.cssText='left:'+left+'%;top:'+top+'%;font-size:'+size+'px;--r:'+rot+'deg;--dur:'+dur+'s;--del:'+del+'s;animation-delay:'+del+'s;opacity:'+opLo;
     layer.appendChild(d);
@@ -2323,8 +2326,19 @@ async function calcCarta(){
     if(!geo){showCartaError('No se encontró la ciudad "'+cityVal+'". Intenta con formato: Ciudad, País');return}
     const [year,month,day]=dateVal.split('-').map(Number);
     const [hour,minute]=(timeVal||'12:00').split(':').map(Number);
-    const ianaZone=tzlookup(geo.lat,geo.lon);
-    const utcDate=localWallClockToUTC(ianaZone,year,month,day,hour,minute);
+    let utcDate;
+    if(typeof tzlookup==='function'){
+      const ianaZone=tzlookup(geo.lat,geo.lon);
+      utcDate=localWallClockToUTC(ianaZone,year,month,day,hour,minute);
+    }else{
+      // Respaldo si la librería de zonas horarias no cargó (ej. sin
+      // internet en ese instante): offset fijo estimado por longitud, sin
+      // considerar horario de verano. Menos exacto, pero nunca rompe el
+      // cálculo.
+      console.warn('tzlookup no disponible; usando offset horario aproximado por longitud.');
+      const approxOffsetH=Math.round(geo.lon/15);
+      utcDate=new Date(Date.UTC(year,month-1,day,hour-approxOffsetH,minute,0));
+    }
     const positions=calcPlanetPositions(utcDate);
     const {asc,mc,ramc,obliq}=calcASCMC(utcDate,geo.lat,geo.lon);
     positions.asc=asc;positions.mc=mc;
@@ -3057,6 +3071,13 @@ function runDiag(){
 
 // compatibilidad con llamada antigua si existía
 function activChakra(i){openChakra(i)}
+function resetDiag(){
+  diagSel.forEach(t=>t.classList.remove('sel'));
+  diagSel=[];
+  $('ch-diag-hint').textContent='0 / 3 seleccionados';
+  $('ch-diag-btn').classList.remove('ready');
+  document.querySelectorAll('.chi').forEach(el=>el.classList.remove('diag-match','diag-dim'));
+}
 
 // ═══════════════════════════════════════
 // TAROT — DECK COMPLETO 78 CARTAS + TIRADAS
@@ -3129,7 +3150,7 @@ const TIRADAS={
 function shuffle(arr){return arr.slice().sort(()=>Math.random()-.5)}
 
 let tiradaActiva='unica',selCards=[],mazo=shuffle([...DECK]);
-const BACK_SVG=`<svg viewBox="0 0 65 96" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><rect width="65" height="96" fill="#120830"/><rect x="3" y="3" width="59" height="90" fill="none" stroke="rgba(201,168,76,.38)" stroke-width=".8"/><rect x="6" y="6" width="53" height="84" fill="none" stroke="rgba(201,168,76,.18)" stroke-width=".5"/><polygon points="32.5,11 39,28 56,28 43,38 48,54 32.5,44 17,54 22,38 9,28 26,28" fill="none" stroke="rgba(201,168,76,.32)" stroke-width=".8"/><circle cx="32.5" cy="48" r="18" fill="none" stroke="rgba(201,168,76,.13)" stroke-width=".5" stroke-dasharray="2,2"/><text x="32.5" y="51" text-anchor="middle" font-size="7" fill="rgba(201,168,76,.45)" font-family="serif">✦</text><text x="32.5" y="86" text-anchor="middle" font-size="4.5" fill="rgba(201,168,76,.28)" font-family="serif" letter-spacing="1">TA·ROD</text></svg>`;
+const BACK_SVG=`<svg viewBox="0 0 65 96" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:100%;height:100%"><rect width="65" height="96" fill="#07071A"/><rect x="2" y="2" width="61" height="92" fill="none" stroke="rgba(201,168,76,.4)" stroke-width="1"/><image href="images/card-back-logo.jpg" xlink:href="images/card-back-logo.jpg" x="6.5" y="8" width="52" height="80" preserveAspectRatio="xMidYMid meet"/></svg>`;
 function rwsImg(id,styles){const fn=RWS_MAP[id];if(!fn)return'<div style="'+styles+'font-size:1.5rem;display:flex;align-items:center;justify-content:center;background:#1A0A30">'+DECK[id].g+'</div>';return'<img src="'+cardImgUrl(id)+'" style="'+styles+'object-fit:cover;display:block" loading="lazy" onerror="this.style.display=\'none\'">';}
 function selTirada(k,btn){
   tiradaActiva=k;
@@ -3417,10 +3438,26 @@ const BLOCKED_DAYS=[0]; // 0=domingo
 //              allow create: if !exists(/databases/$(database)/documents/bookings/$(bookingId));
 //              allow update, delete: if false;
 //            }
+//            match /comentarios/{commentId} {
+//              allow read: if true;
+//              allow create: if request.resource.data.name is string
+//                            && request.resource.data.name.size() <= 60
+//                            && request.resource.data.text is string
+//                            && request.resource.data.text.size() <= 600;
+//              allow update, delete: if false;
+//            }
 //          }
 //        }
 //      Esto hace que, aunque dos personas confirmen al mismo tiempo, Firestore
 //      solo deje pasar a la primera — la segunda recibe un error automático.
+//      La colección "comentarios" es de lectura pública y solo permite crear
+//      (nunca editar ni borrar desde el navegador) — así los testimonios de
+//      la sección "Lo que Dicen de Nosotros" quedan compartidos entre TODOS
+//      los visitantes, no solo guardados en el navegador de quien escribió.
+//      Nota: esa regla no modera contenido (cualquiera puede publicar lo que
+//      quiera dentro del límite de caracteres); si más adelante quieres
+//      revisar/aprobar comentarios antes de publicarlos, se puede agregar un
+//      campo "aprobado" y un panel simple — avísame si lo necesitas.
 //   4. Ícono de engranaje → "Configuración del proyecto" → baja hasta "Tus apps"
 //      → ícono web "</>" → registra la app → copia el objeto firebaseConfig.
 //   5. Pega esos valores en FIREBASE_CONFIG aquí abajo.
@@ -4182,6 +4219,312 @@ async function submitComentario(ev){
 }
 renderComentarios();
 renderStarPicker();
+
+// Formas reales (simplificadas) de las 12 constelaciones zodiacales, basadas en la posición
+// relativa de sus estrellas principales — cada una en su propio sistema de coordenadas local;
+// el algoritmo de encuadre de abajo las recentra y escala automáticamente para la caja.
+const ZODIAC_SHAPES=[
+  {id:'Ari',name:'♈ Aries', col:'rgba(255,130,70,',stars:[{x:0.259,y:-0.124},{x:0.092,y:-0.098},{x:0.33,y:-0.07},{x:-0.33,y:0.124}],lines:[[0,1],[0,2],[1,3]]},
+  {id:'Tau',name:'♉ Tauro', col:'rgba(150,210,100,',stars:[{x:-0.267,y:-0.274},{x:-0.106,y:-0.131},{x:-0.33,y:-0.101},{x:-0.048,y:-0.042},{x:-0.044,y:0.01},{x:0.0,y:0.014},{x:-0.098,y:0.035},{x:0.017,y:0.061},{x:-0.034,y:0.065},{x:0.107,y:0.136},{x:0.301,y:0.202},{x:0.33,y:0.274}],lines:[[0,1],[1,3],[1,4],[1,5],[1,7],[2,6],[2,8],[2,9],[3,4],[3,7],[3,8],[4,5],[4,6],[4,9],[5,6],[5,7],[6,7],[6,8],[6,10],[7,8],[7,9],[8,10],[9,10],[10,11]]},
+  {id:'Gem',name:'♊ Géminis', col:'rgba(100,190,255,',stars:[{x:0.101,y:-0.33},{x:-0.122,y:-0.289},{x:0.006,y:-0.229},{x:0.223,y:-0.228},{x:-0.091,y:-0.213},{x:0.111,y:-0.209},{x:-0.247,y:-0.135},{x:-0.083,y:-0.084},{x:0.099,y:-0.028},{x:-0.091,y:0.055},{x:0.124,y:0.093},{x:-0.236,y:0.121},{x:-0.107,y:0.148},{x:0.125,y:0.236},{x:0.247,y:0.259},{x:-0.088,y:0.282},{x:0.058,y:0.296},{x:-0.214,y:0.33}],lines:[[0,8],[1,4],[1,7],[2,3],[2,4],[2,5],[3,4],[3,5],[4,6],[4,7],[4,9],[4,12],[5,8],[7,9],[7,12],[8,10],[8,13],[9,11],[9,12],[10,13],[10,14],[12,15],[13,16]]},
+  {id:'Cnc',name:'♋ Cáncer', col:'rgba(160,160,255,',stars:[{x:-0.038,y:-0.33},{x:0.003,y:-0.157},{x:0.313,y:0.052},{x:-0.313,y:0.33}],lines:[[0,1],[1,2],[1,3]]},
+  {id:'Leo',name:'♌ Leo', col:'rgba(255,195,50,',stars:[{x:0.052,y:-0.213},{x:-0.026,y:-0.2},{x:-0.33,y:-0.155},{x:0.102,y:-0.118},{x:0.08,y:-0.063},{x:-0.006,y:-0.047},{x:-0.038,y:0.035},{x:0.252,y:0.064},{x:0.209,y:0.138},{x:0.33,y:0.213}],lines:[[0,1],[0,3],[3,4],[4,5],[4,7],[5,6],[6,8],[7,9],[8,9]]},
+  {id:'Vir',name:'♍ Virgo', col:'rgba(120,210,140,',stars:[{x:-0.278,y:-0.33},{x:0.11,y:-0.193},{x:-0.229,y:-0.165},{x:-0.024,y:-0.122},{x:-0.165,y:-0.097},{x:-0.157,y:-0.025},{x:-0.15,y:0.062},{x:0.043,y:0.086},{x:0.105,y:0.117},{x:0.152,y:0.149},{x:-0.182,y:0.194},{x:0.278,y:0.298},{x:-0.003,y:0.31},{x:-0.04,y:0.33}],lines:[[0,2],[1,3],[2,4],[3,4],[3,7],[4,5],[4,6],[5,6],[5,10],[6,10],[7,8],[7,9],[7,10],[8,9],[8,11],[9,11],[10,13],[12,13]]},
+  {id:'Lib',name:'♎ Libra', col:'rgba(190,140,255,',stars:[{x:0.134,y:-0.244},{x:-0.215,y:-0.211},{x:0.112,y:0.033},{x:-0.33,y:0.147},{x:0.33,y:0.244}],lines:[[0,1],[0,2],[0,3],[1,3],[2,4]]},
+  {id:'Sco',name:'♏ Escorpio', col:'rgba(255,75,75,',stars:[{x:-0.202,y:-0.33},{x:-0.272,y:-0.268},{x:-0.135,y:-0.163},{x:-0.311,y:-0.15},{x:-0.081,y:-0.126},{x:-0.055,y:-0.074},{x:-0.006,y:0.044},{x:0.234,y:0.135},{x:0.273,y:0.222},{x:-0.004,y:0.251},{x:0.311,y:0.266},{x:0.091,y:0.306},{x:0.206,y:0.33}],lines:[[0,2],[0,6],[1,2],[1,4],[2,3],[2,4],[2,5],[4,5],[4,6],[5,6],[6,9],[7,8],[7,10],[8,10],[9,11],[10,12],[11,12]]},
+  {id:'Sgr',name:'♐ Sagitario', col:'rgba(255,155,55,',stars:[{x:0.131,y:-0.281},{x:-0.038,y:-0.202},{x:0.019,y:-0.193},{x:0.064,y:-0.196},{x:-0.207,y:-0.155},{x:0.171,y:-0.131},{x:0.004,y:-0.085},{x:0.279,y:-0.091},{x:0.063,y:-0.068},{x:0.33,y:-0.046},{x:-0.122,y:-0.043},{x:-0.033,y:-0.034},{x:0.036,y:-0.003},{x:-0.33,y:0.032},{x:-0.128,y:0.054},{x:-0.21,y:0.082},{x:0.279,y:0.103},{x:-0.092,y:0.114},{x:0.163,y:0.165},{x:-0.121,y:0.179},{x:0.261,y:0.186},{x:0.147,y:0.281}],lines:[[0,3],[1,2],[1,3],[2,3],[2,6],[4,10],[5,7],[5,8],[6,11],[7,9],[8,12],[9,16],[9,20],[10,11],[10,12],[10,14],[11,12],[13,15],[14,15],[14,17],[16,20],[17,19],[18,20],[20,21]]},
+  {id:'Cap',name:'♑ Capricornio', col:'rgba(140,195,165,',stars:[{x:0.33,y:-0.159},{x:-0.252,y:-0.136},{x:-0.33,y:-0.13},{x:0.263,y:-0.099},{x:-0.033,y:-0.081},{x:-0.266,y:-0.063},{x:-0.2,y:0.029},{x:0.009,y:0.133},{x:-0.031,y:0.159}],lines:[[0,3],[0,7],[0,8],[1,2],[1,4],[2,5],[2,6],[3,4],[3,7],[3,8],[5,6],[6,8],[7,8]]},
+  {id:'Aqr',name:'♒ Acuario', col:'rgba(80,195,255,',stars:[{x:-0.094,y:-0.221},{x:-0.202,y:-0.211},{x:-0.26,y:-0.17},{x:-0.173,y:-0.175},{x:-0.085,y:-0.174},{x:-0.081,y:-0.151},{x:-0.073,y:-0.108},{x:-0.068,y:-0.081},{x:0.279,y:-0.069},{x:-0.224,y:-0.012},{x:0.014,y:0.005},{x:-0.33,y:0.014},{x:-0.156,y:0.06},{x:-0.143,y:0.132},{x:-0.132,y:0.197},{x:0.33,y:0.221}],lines:[[0,3],[0,4],[0,5],[0,6],[0,7],[0,8],[1,2],[1,3],[2,11],[4,5],[4,6],[4,7],[5,6],[5,7],[6,7],[7,10],[9,11],[9,12],[12,13],[12,14],[13,14]]},
+  {id:'Psc',name:'♓ Piscis', col:'rgba(150,150,255,',stars:[{x:-0.052,y:-0.261},{x:-0.134,y:-0.206},{x:-0.112,y:-0.129},{x:-0.174,y:-0.016},{x:-0.245,y:0.07},{x:-0.267,y:0.097},{x:-0.074,y:0.105},{x:0.28,y:0.12},{x:0.01,y:0.129},{x:0.151,y:0.122},{x:0.098,y:0.124},{x:-0.243,y:0.151},{x:-0.205,y:0.14},{x:0.231,y:0.149},{x:0.323,y:0.156},{x:-0.33,y:0.168},{x:-0.291,y:0.161},{x:0.202,y:0.182},{x:0.327,y:0.181},{x:0.33,y:0.223},{x:0.215,y:0.247},{x:0.281,y:0.261}],lines:[[0,1],[1,2],[2,3],[2,4],[2,5],[2,15],[3,4],[3,5],[3,15],[4,5],[4,15],[5,15],[6,8],[6,10],[6,11],[6,12],[6,14],[6,15],[6,16],[7,8],[7,13],[7,14],[7,17],[7,18],[8,9],[8,10],[9,10],[9,13],[10,14],[11,12],[11,15],[11,16],[12,15],[12,16],[13,17],[14,18],[14,19],[15,16],[17,20],[18,19],[19,21],[20,21]]}
+];
+
+// ═══════════════════════════════════════
+// FONDO DE LA SECCIÓN "ENTRA AL CIELO" — nebulosa, estrellas y estrellas fugaces, sin figuras
+// ═══════════════════════════════════════
+(function(){
+  const cv=$('constel-box-canvas');
+  if(!cv)return;
+  const cx2=cv.getContext('2d');
+  let W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
+  function resize(){
+    const r=cv.parentElement.getBoundingClientRect();
+    W=r.width;H=r.height;
+    cv.width=Math.max(1,W*DPR);cv.height=Math.max(1,H*DPR);
+    cx2.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener('resize',resize);
+  resize();
+
+  const fieldStars=Array.from({length:260},()=>({x:Math.random(),y:Math.random(),r:Math.random()*1.2+.3,a:Math.random()*.5+.15,ph:Math.random()*6.28,sp:Math.random()*.03+.01}));
+  const nebulae=[
+    {x:.12,y:.22,r:.55,col:'rgba(70,45,140,.30)'},
+    {x:.88,y:.30,r:.5,col:'rgba(25,60,120,.28)'},
+    {x:.75,y:.82,r:.55,col:'rgba(95,30,95,.20)'},
+    {x:.08,y:.85,r:.45,col:'rgba(15,40,90,.24)'},
+    {x:.5,y:.1,r:.4,col:'rgba(40,25,100,.20)'},
+    {x:.45,y:.9,r:.5,col:'rgba(60,30,110,.18)'},
+    {x:.95,y:.6,r:.4,col:'rgba(20,50,100,.2)'}
+  ];
+
+  let shoots=[],lastShoot=0;
+
+  function spawnShoot(){
+    const left=Math.random()>.5;
+    const x=left?Math.random()*W*.3:W*.7+Math.random()*W*.3;
+    const y=Math.random()*H*.3;
+    const unit=Math.max(W,H)/320,spd=(2.6+Math.random()*2.2)*unit;
+    const ang=.35+Math.random()*.35;
+    shoots.push({x,y,vx:Math.cos(ang)*spd*(left?1:-1),vy:Math.sin(ang)*spd+unit,life:1,decay:.02+Math.random()*.014,tail:[]});
+  }
+
+  function draw(t){
+    if(W<2||H<2){requestAnimationFrame(draw);return}
+    const cxp=W/2,cyp=H/2;
+    cx2.clearRect(0,0,W,H);
+    const bgGrad=cx2.createLinearGradient(0,0,0,H);
+    bgGrad.addColorStop(0,'#05051a');bgGrad.addColorStop(1,'#0a0a24');
+    cx2.fillStyle=bgGrad;cx2.fillRect(0,0,W,H);
+    nebulae.forEach(n=>{
+      const g=cx2.createRadialGradient(n.x*W,n.y*H,0,n.x*W,n.y*H,n.r*Math.max(W,H));
+      g.addColorStop(0,n.col);g.addColorStop(1,'transparent');
+      cx2.fillStyle=g;cx2.fillRect(0,0,W,H);
+    });
+    fieldStars.forEach(s=>{
+      const a=s.a*(.5+.5*Math.sin(t*.001*s.sp*60+s.ph));
+      cx2.beginPath();cx2.arc(s.x*W,s.y*H,s.r,0,6.28);
+      cx2.fillStyle='rgba(220,215,255,'+a+')';cx2.fill();
+    });
+
+    if(t-lastShoot>2000+Math.random()*2600){spawnShoot();lastShoot=t}
+    shoots=shoots.filter(s=>s.life>0);
+    shoots.forEach(s=>{
+      s.x+=s.vx;s.y+=s.vy;s.life-=s.decay;
+      s.tail.unshift({x:s.x,y:s.y,l:s.life});if(s.tail.length>12)s.tail.pop();
+      s.tail.forEach((pt,i)=>{const pr=1-i/s.tail.length,al=pt.l*pr*.8;
+        cx2.beginPath();cx2.arc(pt.x,pt.y,pr*1.3,0,6.28);cx2.fillStyle='rgba(230,225,255,'+al+')';cx2.fill()});
+      if(s.life>.1){
+        const g=cx2.createRadialGradient(s.x,s.y,0,s.x,s.y,5);
+        g.addColorStop(0,'rgba(255,255,255,'+(s.life*.9)+')');g.addColorStop(1,'transparent');
+        cx2.fillStyle=g;cx2.beginPath();cx2.arc(s.x,s.y,5,0,6.28);cx2.fill();
+      }
+    });
+
+    // Sin marco: el cielo se desvanece hacia los bordes de la sección en vez de cortarse
+    // en un rectángulo, así se funde con el fondo de la página en vez de verse como un cuadro.
+    cx2.save();
+    cx2.globalCompositeOperation='destination-in';
+    const diag=Math.sqrt(W*W+H*H)/2;
+    const mask=cx2.createRadialGradient(cxp,cyp,0,cxp,cyp,diag*.98);
+    mask.addColorStop(0,'rgba(0,0,0,1)');
+    mask.addColorStop(.8,'rgba(0,0,0,1)');
+    mask.addColorStop(1,'rgba(0,0,0,0)');
+    cx2.fillStyle=mask;
+    cx2.fillRect(0,0,W,H);
+    cx2.restore();
+
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+
+// ═══════════════════════════════════════
+// RUEDA ZODIACAL — Sol, Tierra y las 12 constelaciones reales alrededor de la eclíptica,
+// dentro de su propio espacio del flujo (entre el subtítulo y los botones), transparente,
+// para que nunca invada el texto ni los tabs
+// ═══════════════════════════════════════
+(function(){
+  const cv=$('constel-shape-canvas');
+  if(!cv)return;
+  const cx2=cv.getContext('2d');
+  let W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
+  function resize(){
+    const r=cv.parentElement.getBoundingClientRect();
+    W=r.width;H=r.height;
+    cv.width=Math.max(1,W*DPR);cv.height=Math.max(1,H*DPR);
+    cx2.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener('resize',resize);
+  resize();
+
+  // Reencuadra cada constelación (forma real) a un sistema de coordenadas propio -0.5..0.5,
+  // conservando sus proporciones, indexada por su abreviatura para poder ubicarla en el anillo.
+  const shapeById={};
+  ZODIAC_SHAPES.forEach(c=>{
+    const xs=c.stars.map(s=>s.x),ys=c.stars.map(s=>s.y);
+    const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+    const w=Math.max(maxX-minX,.02),h=Math.max(maxY-minY,.02);
+    const scale=.9/Math.max(w,h),ccx=(minX+maxX)/2,ccy=(minY+maxY)/2;
+    shapeById[c.id]={
+      name:c.name,col:c.col,lines:c.lines,
+      stars:c.stars.map(s=>({x:(s.x-ccx)*scale,y:(s.y-ccy)*scale}))
+    };
+  });
+
+  // Orden real de la eclíptica, en sentido horario a partir de arriba — igual disposición
+  // que en el diagrama de referencia (Sol y Tierra en el centro, signos alrededor).
+  const RING_ORDER=['Ari','Psc','Aqr','Cap','Sgr','Sco','Lib','Vir','Leo','Cnc','Gem','Tau'];
+  const ringAngleOf=id=>-Math.PI/2+RING_ORDER.indexOf(id)*(Math.PI*2/RING_ORDER.length);
+
+  // Fechas de inicio de cada signo (orden cronológico real, Aries→Piscis) para calcular
+  // en qué signo está el Sol hoy y qué tan avanzado va dentro de ese signo (0..1),
+  // de modo que la Tierra avance a lo largo del año exactamente como en la realidad.
+  const SIGN_DATES=[
+    {id:'Ari',m:3,d:21},{id:'Tau',m:4,d:20},{id:'Gem',m:5,d:21},{id:'Cnc',m:6,d:21},
+    {id:'Leo',m:7,d:23},{id:'Vir',m:8,d:23},{id:'Lib',m:9,d:23},{id:'Sco',m:10,d:23},
+    {id:'Sgr',m:11,d:22},{id:'Cap',m:12,d:22},{id:'Aqr',m:1,d:20},{id:'Psc',m:2,d:19}
+  ];
+  // Cálculo del día del año consciente de años bisiestos (365 o 366 días), para que el
+  // desfase de fecha nunca se acumule ni siquiera 1 día en años como 2028, 2032, etc.
+  const isLeapYear=y=>(y%4===0&&y%100!==0)||y%400===0;
+  const daysInMonthFor=y=>[31,isLeapYear(y)?29:28,31,30,31,30,31,31,30,31,30,31];
+  function dayOfYear(month,day,year){
+    const dim=daysInMonthFor(year);
+    let doy=day; for(let i=0;i<month-1;i++) doy+=dim[i]; return doy;
+  }
+
+  // Ángulo objetivo (0=Aries en su posición del anillo) que le corresponde al Sol hoy,
+  // avanzando de forma continua y suave a lo largo del año — recalculado cada cuadro a
+  // partir de la fecha y hora reales del dispositivo.
+  function currentEclipticAngle(){
+    const now=new Date();
+    const year=now.getFullYear();
+    const yearLen=isLeapYear(year)?366:365;
+    const hourFrac=(now.getHours()+now.getMinutes()/60+now.getSeconds()/3600)/24;
+    let nowDoy=dayOfYear(now.getMonth()+1, now.getDate()+hourFrac, year);
+    const SIGN_BOUNDS=SIGN_DATES.map(s=>({id:s.id,doy:dayOfYear(s.m,s.d,year)}));
+    let idx=0;
+    for(let i=0;i<12;i++){
+      const b0=SIGN_BOUNDS[i].doy, b1=SIGN_BOUNDS[(i+1)%12].doy;
+      if(b1>b0){ if(nowDoy>=b0&&nowDoy<b1){idx=i;break} }
+      else { if(nowDoy>=b0||nowDoy<b1){idx=i;break} }
+    }
+    const b0=SIGN_BOUNDS[idx].doy;
+    let b1=SIGN_BOUNDS[(idx+1)%12].doy; if(b1<=b0) b1+=yearLen;
+    let adjNow=nowDoy<b0?nowDoy+yearLen:nowDoy;
+    const frac=Math.max(0,Math.min(1,(adjNow-b0)/(b1-b0)));
+    const signId=SIGN_BOUNDS[idx].id;
+    const step=Math.PI*2/12;
+    // Cada signo cronológico siguiente cae exactamente un paso "hacia atrás" en el anillo
+    // (así quedó dispuesto el anillo visual), así que el ángulo avanza restando el paso.
+    return {angle: ringAngleOf(signId)-step*frac, signId};
+  }
+
+  function draw(t){
+    if(W<2||H<2){requestAnimationFrame(draw);return}
+    cx2.clearRect(0,0,W,H);
+    const unit=Math.min(W,H);
+    const cx=W/2, cy=H*0.50;
+    const rx=W*0.40, ry=H*0.30;
+
+    // Banda zodiacal — anillo exterior punteado
+    cx2.save();
+    cx2.setLineDash([2,7]);
+    cx2.strokeStyle='rgba(150,170,255,.32)';
+    cx2.lineWidth=1;
+    cx2.beginPath();cx2.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);cx2.stroke();
+    cx2.restore();
+
+    // Órbita de la Tierra alrededor del Sol
+    const orx=unit*0.15, ory=unit*0.095;
+    cx2.strokeStyle='rgba(140,170,255,.5)';
+    cx2.lineWidth=1;
+    cx2.beginPath();cx2.ellipse(cx,cy,orx,ory,0,0,Math.PI*2);cx2.stroke();
+
+    // Sol
+    const sunR=unit*0.042;
+    const sg=cx2.createRadialGradient(cx,cy,0,cx,cy,sunR*3.4);
+    sg.addColorStop(0,'rgba(255,235,160,1)');
+    sg.addColorStop(.4,'rgba(255,180,60,.55)');
+    sg.addColorStop(1,'transparent');
+    cx2.fillStyle=sg;cx2.beginPath();cx2.arc(cx,cy,sunR*3.4,0,6.28);cx2.fill();
+    cx2.fillStyle='#FFE9B0';cx2.beginPath();cx2.arc(cx,cy,sunR,0,6.28);cx2.fill();
+
+    // Tierra, ubicada según el día del año real (365 días = una vuelta completa),
+    // señalando siempre la constelación zodiacal que corresponde a la fecha de hoy
+    const eclip=currentEclipticAngle();
+    const earthAngle=eclip.angle+Math.PI;
+    const ex=cx+Math.cos(earthAngle)*orx, ey=cy+Math.sin(earthAngle)*ory;
+    cx2.strokeStyle='rgba(150,190,255,.4)';cx2.lineWidth=.8;
+    cx2.beginPath();cx2.arc(ex,ey,unit*0.02,0,6.28);cx2.stroke();
+    cx2.fillStyle='#5B9BD5';cx2.beginPath();cx2.arc(ex,ey,unit*0.012,0,6.28);cx2.fill();
+
+    // Luna, orbitando la Tierra en su posición real: se calcula la elongación
+    // geocéntrica real (Astronomy.MoonPhase) entre la Luna y el Sol para ubicarla
+    // exactamente donde está hoy respecto a la línea Tierra–Sol (0°=Luna nueva,
+    // 180°=Luna llena, etc.), recalculado cada cuadro igual que el resto del diagrama.
+    // El radio de esta órbita NO está a escala real (en la realidad sería
+    // invisible de tan pequeño comparado con la órbita Tierra-Sol); se agranda
+    // a propósito para que el movimiento de la Luna alrededor de la Tierra se
+    // note claramente, igual que se nota el de la Tierra alrededor del Sol.
+    let moonElongDeg=0;
+    try{
+      if(typeof Astronomy!=='undefined'&&Astronomy.MoonPhase) moonElongDeg=Astronomy.MoonPhase(new Date());
+    }catch(e){}
+    const moonElongRad=moonElongDeg*Math.PI/180;
+    const sunFromEarthAngle=Math.atan2(cy-ey,cx-ex);
+    const moonAngle=sunFromEarthAngle-moonElongRad;
+    const morx=unit*0.075, mory=morx*(ory/orx);
+    const mxp=ex+Math.cos(moonAngle)*morx, myp=ey+Math.sin(moonAngle)*mory;
+    // Órbita lunar (tenue) alrededor de la Tierra
+    cx2.save();
+    cx2.setLineDash([1,4]);
+    cx2.strokeStyle='rgba(200,200,220,.28)';cx2.lineWidth=.6;
+    cx2.beginPath();cx2.ellipse(ex,ey,morx,mory,0,0,Math.PI*2);cx2.stroke();
+    cx2.restore();
+    const mg=cx2.createRadialGradient(mxp,myp,0,mxp,myp,unit*0.016);
+    mg.addColorStop(0,'rgba(230,230,240,.9)');mg.addColorStop(1,'transparent');
+    cx2.fillStyle=mg;cx2.beginPath();cx2.arc(mxp,myp,unit*0.016,0,6.28);cx2.fill();
+    cx2.fillStyle='#D8D8E4';cx2.beginPath();cx2.arc(mxp,myp,unit*0.007,0,6.28);cx2.fill();
+
+    // Línea Tierra–Sol proyectada hacia el signo zodiacal que ocupa el fondo del cielo
+    const dx=cx-ex, dy=cy-ey, len=Math.sqrt(dx*dx+dy*dy)||1, ux=dx/len, uy=dy/len;
+    cx2.save();
+    cx2.strokeStyle='rgba(160,190,255,.4)';cx2.lineWidth=1;
+    cx2.beginPath();cx2.moveTo(ex,ey);cx2.lineTo(cx+ux*rx*1.04,cy+uy*ry*1.04);cx2.stroke();
+    cx2.restore();
+
+    // Las 12 constelaciones reales alrededor del anillo, con su nombre de horóscopo
+    const n=RING_ORDER.length;
+    RING_ORDER.forEach((id,i)=>{
+      const ang=-Math.PI/2+i*(Math.PI*2/n);
+      const px=cx+Math.cos(ang)*rx, py=cy+Math.sin(ang)*ry;
+      const shape=shapeById[id];
+      if(!shape)return;
+      const isCurrent=id===eclip.signId;
+      const su=unit*0.13;
+      if(isCurrent){
+        const hg=cx2.createRadialGradient(px,py,0,px,py,su*1.35);
+        hg.addColorStop(0,shape.col+'.22)');hg.addColorStop(1,'transparent');
+        cx2.fillStyle=hg;cx2.beginPath();cx2.arc(px,py,su*1.35,0,6.28);cx2.fill();
+      }
+      cx2.lineWidth=Math.max(.8,unit/500);
+      shape.lines.forEach(([i1,i2])=>{
+        const s1=shape.stars[i1],s2=shape.stars[i2];
+        cx2.strokeStyle=shape.col+'.8)';
+        cx2.beginPath();cx2.moveTo(px+s1.x*su,py+s1.y*su);cx2.lineTo(px+s2.x*su,py+s2.y*su);cx2.stroke();
+      });
+      shape.stars.forEach((s,si)=>{
+        const sx=px+s.x*su, sy=py+s.y*su, sr=(si===0?2.2:1.5)*(unit/500);
+        const g=cx2.createRadialGradient(sx,sy,0,sx,sy,sr*4);
+        g.addColorStop(0,shape.col+'.55)');g.addColorStop(1,'transparent');
+        cx2.fillStyle=g;cx2.beginPath();cx2.arc(sx,sy,sr*4,0,6.28);cx2.fill();
+        cx2.beginPath();cx2.arc(sx,sy,sr,0,6.28);cx2.fillStyle=shape.col+'1)';cx2.fill();
+      });
+      const labelAbove=Math.sin(ang)<=0.05;
+      let labelY=labelAbove?(py-su*0.62-unit*0.022):(py+su*0.62+unit*0.05);
+      const labelPad=unit*0.03;
+      labelY=Math.max(labelPad*3, Math.min(H-labelPad, labelY));
+      cx2.font=(Math.max(10,unit*.028))+'px "Cormorant Garamond",serif';
+      cx2.textAlign='center';
+      cx2.fillStyle=shape.col+'.92)';
+      cx2.fillText(shape.name,px,labelY);
+    });
+
+    requestAnimationFrame(draw);
+  }
+  requestAnimationFrame(draw);
+})();
+
 
 // CIELO EN VIVO — mapa celeste real (d3-celestial)
 // ═══════════════════════════════════════
