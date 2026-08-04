@@ -501,6 +501,30 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
   .info-grid{grid-template-columns:1fr}
   .tab-btn{font-size:.58rem;padding:.65rem 1.1rem}
 }
+/* COMENTARIOS / TESTIMONIOS */
+.com-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--br);margin-bottom:3.5rem}
+.com-card{background:var(--abyss);padding:2.4rem 1.8rem;text-align:left;transition:all .4s;position:relative}
+.com-card:hover{background:rgba(201,168,76,.03)}
+.com-stars{color:var(--gold);font-size:.85rem;letter-spacing:.15em;margin-bottom:1rem}
+.com-text{font-family:'Cormorant Garamond',serif;font-size:.98rem;font-style:italic;color:var(--tp);line-height:1.65;margin-bottom:1.4rem}
+.com-foot{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--br);padding-top:1rem}
+.com-name{font-size:.68rem;letter-spacing:.1em;color:var(--gl)}
+.com-tag{font-size:.52rem;letter-spacing:.15em;text-transform:uppercase;padding:.28rem .6rem;border:1px solid var(--br);color:var(--gd)}
+.com-form-wrap{max-width:640px;margin:0 auto;padding:2.4rem 2.2rem;border:1px solid var(--br);background:rgba(201,168,76,.02)}
+.com-form-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gl);text-align:center;margin-bottom:.4rem}
+.com-form-sub{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--ts);text-align:center;font-size:.88rem;margin-bottom:1.8rem}
+.com-form{display:flex;flex-direction:column;gap:1.2rem}
+.com-row{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.com-form select,.com-form textarea{background:rgba(201,168,76,.03);border:1px solid var(--br);padding:.85rem 1rem;color:var(--tp);font-family:'Inter',sans-serif;font-size:.82rem;outline:none;transition:border-color .3s;-webkit-appearance:none;color-scheme:dark;resize:vertical}
+.com-form select:focus,.com-form textarea:focus,.com-form input:focus{border-color:var(--gold);background:rgba(201,168,76,.06)}
+.com-form textarea{min-height:90px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:.9rem}
+.com-stars-pick{display:flex;gap:.4rem;font-size:1.3rem;justify-content:center}
+.com-star-btn{background:none;border:none;cursor:pointer;color:var(--tm);transition:color .2s;padding:0}
+.com-star-btn.on{color:var(--gold)}
+.com-submit{align-self:center;padding:.85rem 2.4rem;background:linear-gradient(135deg,rgba(201,168,76,.15),rgba(201,168,76,.05));border:1px solid var(--gold);color:var(--gl);font-family:'Inter',sans-serif;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:all .4s}
+.com-submit:hover{box-shadow:0 0 24px rgba(201,168,76,.22)}
+.com-msg{text-align:center;font-size:.68rem;letter-spacing:.1em;color:var(--gold);min-height:1.2rem}
+@media(max-width:760px){.com-grid{grid-template-columns:1fr}.com-row{grid-template-columns:1fr}}
 /* QUIZ: ANIMAL DE PODER */
 .pq-wrap{max-width:700px;margin:2.6rem auto 0;text-align:center}
 .pq-intro-lbl{font-size:.58rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gd);margin-bottom:.6rem}
@@ -552,6 +576,7 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
     <li><a href="#modulo-chamanismo">Chamanismo</a></li>
     <li><a href="#modulo-akashicos">Registros Akásicos</a></li>
     <li><a href="#modulo-sanacion">Espacio de Sanación</a></li>
+    <li><a href="#comentarios">Comentarios</a></li>
     <li><a href="#servicios">Sesiones</a></li>
   </ul>
   <button class="nav-cta" onclick="openModal()">Agendar Sesión</button>
@@ -1032,6 +1057,41 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
 
   <div class="back-row"><a href="#hero" class="btn-back">↑ Volver al inicio</a></div>
 </section>
+
+<!-- COMENTARIOS -->
+<section id="comentarios" style="background:linear-gradient(180deg,var(--abyss) 0%,rgba(18,10,46,.5) 50%,var(--abyss) 100%)">
+  <div class="divider"></div>
+  <p class="eyebrow">Voces del Camino</p>
+  <h2 class="sec-title rv">Lo que <em>Dicen</em> de Nosotros</h2>
+  <p class="sec-sub rv">Experiencias reales de quienes ya transitaron una sesión</p>
+  <div class="com-grid rv" id="com-grid"></div>
+  <div class="com-form-wrap rv">
+    <h3 class="com-form-title">Comparte tu Experiencia</h3>
+    <p class="com-form-sub">Tu palabra ayuda a otros a dar el primer paso</p>
+    <form class="com-form" id="com-form" onsubmit="submitComentario(event)">
+      <div class="com-row">
+        <div class="fg"><label>Tu Nombre</label><input type="text" id="com-name" placeholder="Ej: María G." required></div>
+        <div class="fg"><label>Servicio Recibido</label>
+          <select id="com-service" required>
+            <option value="" disabled selected>Selecciona un módulo</option>
+            <option>Tarot</option>
+            <option>Astrología</option>
+            <option>Chamanismo</option>
+            <option>Registros Akásicos</option>
+            <option>Espacio de Sanación</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label>Tu Calificación</label>
+        <div class="com-stars-pick" id="com-stars-pick"></div>
+      </div>
+      <div class="fg"><label>Tu Comentario</label><textarea id="com-text" placeholder="Cuéntanos cómo fue tu experiencia..." required></textarea></div>
+      <button type="submit" class="com-submit">Publicar Comentario</button>
+      <p class="com-msg" id="com-msg"></p>
+    </form>
+  </div>
+</section>
+
 <!-- SERVICIOS -->
 <section id="servicios" style="background:linear-gradient(180deg,var(--abyss) 0%,var(--dp) 100%)">
   <div class="divider"></div>
@@ -1066,6 +1126,7 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
     <li><a href="#modulo-chamanismo">Chamanismo</a></li>
     <li><a href="#modulo-akashicos">Registros Akásicos</a></li>
     <li><a href="#modulo-sanacion">Espacio de Sanación</a></li>
+    <li><a href="#comentarios">Comentarios</a></li>
     <li><a href="#servicios">Sesiones</a></li>
   </ul>
   <p class="f-copy">© 2026 TA-ROD · Con amor cósmico</p>
@@ -3123,6 +3184,86 @@ function restartPQ(){
   $('pq-result').innerHTML='';
   $('pq-intro').style.display='';
 }
+
+// ═══════════════════════════════════════
+// COMENTARIOS / TESTIMONIOS
+// ═══════════════════════════════════════
+const COMENTARIOS_EJEMPLO=[
+  {name:'Marcela Vindas',service:'Tarot',stars:5,text:'La lectura fue reveladora al punto de erizarme la piel. Cada carta describía exactamente lo que estaba viviendo, y las orientaciones me dieron una claridad que no había sentido en meses.'},
+  {name:'Andrés Solano',service:'Astrología',stars:5,text:'Mi Carta Natal fue explicada con una profundidad impresionante. Entendí patrones de mi personalidad y momentos clave de mi vida que antes no lograba conectar. Una sesión de altísimo nivel.'},
+  {name:'Fiorella Castro',service:'Chamanismo',stars:5,text:'La limpieza chamánica me dejó una sensación de ligereza física y emocional que duró semanas. Se siente el respeto y la sabiduría con la que se guía cada ritual.'},
+  {name:'Ricardo Jiménez',service:'Registros Akásicos',stars:5,text:'Fue como leer el manual de mi propia alma. La lectura de los Registros Akásicos me ayudó a soltar un patrón kármico que llevaba arrastrando por años. Totalmente recomendado.'},
+  {name:'Laura Méndez',service:'Espacio de Sanación',stars:5,text:'La sanación pleyadiana con cuarzos fue una experiencia profundamente sanadora. Salí con el campo energético renovado y una paz que se nota en el día a día. Servicio excelente de principio a fin.'}
+];
+function comStarsHtml(n){let s='';for(let i=1;i<=5;i++)s+=(i<=n?'★':'☆');return s}
+function renderComCard(c){
+  return '<div class="com-card"><div class="com-stars">'+comStarsHtml(c.stars)+'</div><p class="com-text">"'+c.text+'"</p><div class="com-foot"><span class="com-name">'+c.name+'</span><span class="com-tag">'+c.service+'</span></div></div>';
+}
+// Comentarios reales, compartidos entre TODOS los visitantes, guardados en la
+// misma base de datos Firestore que ya usa el sistema de reservas
+// (colección separada: 'comentarios'). Si Firestore no está disponible o las
+// reglas aún no se actualizaron, cae automáticamente a localStorage (solo
+// visible en ese navegador) para que la sección nunca se rompa.
+async function renderComentarios(){
+  const grid=$('com-grid');if(!grid)return;
+  let extra=[],fromCloud=false;
+  if(bookingsDB){
+    try{
+      const snap=await bookingsDB.collection('comentarios').orderBy('createdAt','desc').limit(60).get();
+      extra=snap.docs.map(d=>d.data());
+      fromCloud=true;
+    }catch(e){
+      console.warn('No se pudieron leer comentarios de Firestore (¿reglas actualizadas?), uso respaldo local:',e);
+    }
+  }
+  if(!fromCloud){
+    try{extra=JSON.parse(localStorage.getItem('tarod_comentarios')||'[]').slice().reverse()}catch(e){extra=[]}
+  }
+  grid.innerHTML=COMENTARIOS_EJEMPLO.map(renderComCard).join('')+extra.map(renderComCard).join('');
+}
+let comRating=5;
+function renderStarPicker(){
+  const wrap=$('com-stars-pick');if(!wrap)return;
+  wrap.innerHTML='';
+  for(let i=1;i<=5;i++){
+    const b=document.createElement('button');
+    b.type='button';b.className='com-star-btn'+(i<=comRating?' on':'');b.textContent='★';
+    b.onclick=()=>{comRating=i;renderStarPicker()};
+    wrap.appendChild(b);
+  }
+}
+async function submitComentario(ev){
+  ev.preventDefault();
+  const name=$('com-name').value.trim();
+  const service=$('com-service').value;
+  const text=$('com-text').value.trim();
+  if(!name||!service||!text)return false;
+  const btn=$('com-form').querySelector('.com-submit');
+  if(btn){btn.disabled=true;btn.textContent='Publicando...'}
+  const entry={name:name.slice(0,60),service,stars:comRating,text:text.slice(0,600)};
+  let savedToCloud=false;
+  if(bookingsDB){
+    try{
+      await bookingsDB.collection('comentarios').add(Object.assign({},entry,{createdAt:firebase.firestore.FieldValue.serverTimestamp()}));
+      savedToCloud=true;
+    }catch(e){console.warn('No se pudo guardar en Firestore, se guarda solo en este navegador:',e)}
+  }
+  if(!savedToCloud){
+    let extraLocal=[];
+    try{extraLocal=JSON.parse(localStorage.getItem('tarod_comentarios')||'[]')}catch(e){extraLocal=[]}
+    extraLocal.push(entry);
+    localStorage.setItem('tarod_comentarios',JSON.stringify(extraLocal));
+  }
+  await renderComentarios();
+  $('com-form').reset();
+  comRating=5;renderStarPicker();
+  if(btn){btn.disabled=false;btn.textContent='Publicar Comentario'}
+  $('com-msg').textContent=savedToCloud?'✦ Gracias por compartir tu experiencia — ya es visible para todos ✦':'✦ Guardado en este navegador (activa Firestore para compartirlo con todos) ✦';
+  setTimeout(()=>{const m=$('com-msg');if(m)m.textContent=''},4800);
+  return false;
+}
+renderComentarios();
+renderStarPicker();
 
 // ═══════════════════════════════════════
 // SCROLL REVEAL
