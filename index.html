@@ -614,8 +614,9 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
 .cielo-cal-month{font-family:'Inter',sans-serif;font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);border-bottom:1px solid var(--br);padding-bottom:.4rem;margin:1.6rem 0 .9rem}
 .cielo-cal-month:first-of-type{margin-top:0}
 .cielo-map-wrap{flex:1;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;min-height:0;min-width:0}
-#celestial-map{margin:0 auto;flex-shrink:0;position:relative;z-index:1}
+#celestial-map{margin:0 auto;flex-shrink:0;position:relative;z-index:1;touch-action:none}
 #celestial-map canvas{cursor:grab}
+#celestial-map svg{touch-action:none}
 .cielo-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;background:#07071A;z-index:2}
 /* ═══ Modo AR (cámara + inclinación) — capa aditiva sobre el mapa existente ═══ */
 .cielo-ar-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;display:none;background:#000}
@@ -4769,14 +4770,24 @@ async function cieloToggleTilt(){
       }
     }catch(e){}
   };
-  window.addEventListener('deviceorientation',cieloTiltHandler);
+  // El heading (giro izquierda/derecha) necesita el sensor "absoluto" (fusión con
+  // brújula/magnetómetro) para no quedar mudo en celulares sin giroscopio — el mismo
+  // motivo por el que la brújula ya usa 'deviceorientationabsolute' cuando existe.
+  // Con solo 'deviceorientation' el eje vertical (beta) sí llegaba, pero alpha podía
+  // quedar en null o sin actualizarse, por eso girar el teléfono no movía el mapa.
+  const tiltEvName=('ondeviceorientationabsolute' in window)?'deviceorientationabsolute':'deviceorientation';
+  window.addEventListener(tiltEvName,cieloTiltHandler,true);
   cieloTiltActive=true;
   $c('cielo-ar-tilt-btn').classList.add('active');
   cieloARShowStatus('Mueve el teléfono hacia arriba, abajo, izquierda o derecha para recorrer el cielo. Usa el slider derecho si notas desalineación vertical.');
 }
 
 function cieloStopTilt(){
-  if(cieloTiltHandler){ window.removeEventListener('deviceorientation',cieloTiltHandler); cieloTiltHandler=null; }
+  if(cieloTiltHandler){
+    window.removeEventListener('deviceorientationabsolute',cieloTiltHandler,true);
+    window.removeEventListener('deviceorientation',cieloTiltHandler,true);
+    cieloTiltHandler=null;
+  }
   cieloTiltActive=false;
   const btn=$c('cielo-ar-tilt-btn'); if(btn)btn.classList.remove('active');
 }
@@ -4900,20 +4911,20 @@ function cieloBuildConfig(){
     daylight:{show:false},
     planets:{show:true,which:['ter','sol','mer','ven','lun','mar','jup','sat','ura','nep','plu'],
       symbols:{
-        sol:{symbol:'☉',letter:'S', fill:'#FFD98A',size:22},
-        mer:{symbol:'☿',letter:'Me',fill:'#BFB6AC',size:16},
-        ven:{symbol:'♀',letter:'V', fill:'#F5E8C9',size:17},
-        lun:{symbol:'☾',letter:'L', fill:'#F0EDE4',size:20},
-        mar:{symbol:'♂',letter:'Ma',fill:'#E27B4F',size:17},
-        jup:{symbol:'♃',letter:'J', fill:'#E8C28A',size:19},
-        sat:{symbol:'♄',letter:'Sa',fill:'#E3D2A0',size:18},
-        ura:{symbol:'♅',letter:'U', fill:'#8FD8E0',size:16},
-        nep:{symbol:'♆',letter:'N', fill:'#6E8FE0',size:16},
-        plu:{symbol:'♇',letter:'P', fill:'#C9B8A0',size:15}
+        sol:{symbol:'☉',letter:'S', fill:'#FFD98A',size:18},
+        mer:{symbol:'☿',letter:'Me',fill:'#BFB6AC',size:8},
+        ven:{symbol:'♀',letter:'V', fill:'#F5E8C9',size:11},
+        lun:{symbol:'☾',letter:'L', fill:'#F0EDE4',size:16},
+        mar:{symbol:'♂',letter:'Ma',fill:'#E27B4F',size:9},
+        jup:{symbol:'♃',letter:'J', fill:'#E8C28A',size:13},
+        sat:{symbol:'♄',letter:'Sa',fill:'#E3D2A0',size:12},
+        ura:{symbol:'♅',letter:'U', fill:'#8FD8E0',size:9},
+        nep:{symbol:'♆',letter:'N', fill:'#6E8FE0',size:9},
+        plu:{symbol:'♇',letter:'P', fill:'#C9B8A0',size:6}
       },
-      symbolStyle:{fill:'#F0DDA8',opacity:1,font:"bold 20px 'DejaVu Sans Mono', sans-serif",align:'center',baseline:'middle'},
-      symbolType:'symbol',names:true,
-      nameStyle:{fill:'#E8D5A3',font:"18px 'Noto Sans Symbols', 'DejaVu Sans', Georgia, sans-serif",align:'left',baseline:'middle',offset:14},namesType:'es'}
+      symbolStyle:{fill:'#F0DDA8',opacity:1,stroke:'#07071A',width:1},
+      symbolType:'disk',names:true,
+      nameStyle:{fill:'#E8D5A3',font:"14px 'Cormorant Garamond', Georgia, serif",align:'left',baseline:'middle',offset:12},namesType:'es'}
   };
 }
 function cieloInit(){
