@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ta-rod-cache-v2';
+const CACHE_NAME = 'ta-rod-cache-v3';
 const PRECACHE_URLS = [
   'index.html',
   'manifest.json',
@@ -26,8 +26,14 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  // Para la página en sí (navegación) se ignora la caché HTTP del navegador: si no, aunque
+  // este fetch "de red" se ejecute, el navegador podía devolver una respuesta HTTP ya cacheada
+  // en vez de ir a buscar la versión recién publicada — que fue justo lo que causó que la app
+  // instalada siguiera mostrando cambios viejos aunque el deploy ya estuviera listo.
+  const isNavigation = event.request.mode === 'navigate';
+  const req = isNavigation ? new Request(event.request.url, { cache: 'no-store' }) : event.request;
   event.respondWith(
-    fetch(event.request)
+    fetch(req)
       .then((response) => {
         const clone = response.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));

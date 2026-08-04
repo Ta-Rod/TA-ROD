@@ -5609,7 +5609,16 @@ setupReveal();
   <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('service-worker.js');
+    navigator.serviceWorker.register('service-worker.js').then(reg=>{ try{reg.update();}catch(e){} });
+  });
+  // Cuando el service worker nuevo toma el control (tras publicar un cambio), la app
+  // instalada se recarga sola una vez, en vez de quedar mostrando la versión vieja hasta
+  // que alguien la cierre y reabra manualmente.
+  let cieloSWRefreshed=false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if(cieloSWRefreshed)return;
+    cieloSWRefreshed=true;
+    location.reload();
   });
 }
 </script>
