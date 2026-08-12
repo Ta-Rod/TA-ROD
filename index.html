@@ -460,6 +460,7 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
   .nav-links{display:none}
   section{padding:5rem 1.5rem}
   .carta-form{grid-template-columns:1fr}
+  .num-form{grid-template-columns:1fr}
   .elem-grid{grid-template-columns:repeat(2,1fr)}
   .ch-layout{grid-template-columns:1fr}
   .serv-grid{grid-template-columns:1fr}
@@ -498,7 +499,28 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
 .info-grid .ig-item{border:1px solid var(--br);padding:1.1rem 1.3rem;background:rgba(201,168,76,.02)}
 .info-grid .ig-item h4{font-family:'Playfair Display',serif;font-size:.92rem;color:var(--gold);margin-bottom:.4rem;font-weight:400}
 .info-grid .ig-item p{font-size:.88rem;margin-bottom:0;line-height:1.6}
+
+/* NUMEROLOGÍA */
+.num-form{display:grid;grid-template-columns:1fr 1fr;gap:1.3rem;margin-bottom:1.2rem}
+.num-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.2rem;width:100%}
+.num-card{border:1px solid var(--br);padding:1.7rem 1.4rem;background:rgba(201,168,76,.02);text-align:center;transition:border-color .3s}
+.num-card.master{border-color:var(--gold);box-shadow:0 0 26px rgba(201,168,76,.14)}
+.num-master-badge{display:inline-block;font-size:.5rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);border:1px solid var(--gold);padding:.18rem .55rem;margin-bottom:.9rem}
+.num-card .num-big{font-family:'Playfair Display',serif;font-size:2.9rem;color:var(--gl);line-height:1}
+.num-card.master .num-big{color:var(--gold);text-shadow:0 0 18px rgba(201,168,76,.5)}
+.num-card .num-label{font-size:.56rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gd);margin:.7rem 0 .35rem}
+.num-card .num-kw{font-size:.62rem;letter-spacing:.08em;color:var(--ts);margin-bottom:.7rem;text-transform:uppercase}
+.num-card .num-txt{font-family:'Cormorant Garamond',serif;font-size:.92rem;font-style:italic;color:var(--ts);line-height:1.65}
+.info-grid.num-ref-grid{grid-template-columns:repeat(3,1fr)}
+.num-year-result{display:none;flex-direction:column;align-items:center;gap:.7rem;margin-top:2.2rem;padding-top:2.2rem;border-top:1px solid var(--br)}
+.num-year-result.show{display:flex}
+.num-year-label{font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gd)}
+.num-year-big{font-family:'Playfair Display',serif;font-size:4.2rem;color:var(--gold);text-shadow:0 0 24px rgba(201,168,76,.35);line-height:1}
+.num-year-txt{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-style:italic;color:var(--ts);max-width:440px;line-height:1.75}
+
 @media(max-width:720px){
+  .num-form{grid-template-columns:1fr}
+  .info-grid.num-ref-grid{grid-template-columns:1fr}
   .module-section{padding:4rem 1.4rem}
   .info-grid{grid-template-columns:1fr}
   .tab-btn{font-size:.58rem;padding:.65rem 1.1rem}
@@ -800,6 +822,7 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
   <ul class="nav-links">
     <li><a href="#modulo-tarot">Tarot</a></li>
     <li><a href="#modulo-astrologia">Astrología</a></li>
+    <li><a href="#modulo-numerologia">Numerología</a></li>
     <li><a href="#modulo-chamanismo">Chamanismo</a></li>
     <li><a href="#modulo-akashicos">Registros Akásicos</a></li>
     <li><a href="#modulo-sanacion">Espacio de Sanación</a></li>
@@ -1003,6 +1026,94 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
   <div class="back-row" style="margin-top:2.5rem;border-top:none;padding-top:0"><button class="info-cta" onclick="openModal()">✦ Agendar una Sesión Guiada por tu Ciclo Lunar ✦</button></div>
 </div>
 
+
+  <div class="back-row"><a href="#hero" class="btn-back">↑ Volver al inicio</a></div>
+</section>
+
+<!-- ============ MODULO: NUMEROLOGÍA ============ -->
+<section id="modulo-numerologia" class="module-section" style="background:linear-gradient(180deg,var(--abyss) 0%,rgba(18,10,46,.6) 50%,var(--abyss) 100%)">
+  <div class="divider"></div>
+  <p class="eyebrow">Ciencia de los Números</p>
+  <h2 class="sec-title rv">Numerolog<em>ía</em></h2>
+  <p class="sec-sub rv">Tu nombre y tu fecha de nacimiento guardan un código numérico — descífralo</p>
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="num-calculadora" onclick="activateTab('modulo-numerologia','num-calculadora')">Calculadora</button>
+    <button class="tab-btn" data-tab="num-anio-personal" onclick="activateTab('modulo-numerologia','num-anio-personal')">Año Personal</button>
+    <button class="tab-btn" data-tab="num-significados" onclick="activateTab('modulo-numerologia','num-significados')">Significado de los Números</button>
+    <button class="tab-btn" data-tab="num-maestros" onclick="activateTab('modulo-numerologia','num-maestros')">✦ Números Maestros</button>
+  </div>
+
+  <!-- CALCULADORA -->
+<div class="tab-panel active" id="num-calculadora" data-module="modulo-numerologia" data-tab="num-calculadora">
+  <div style="max-width:960px;margin:0 auto">
+    <div class="num-form rv">
+      <div class="fg"><label>Nombre Completo</label><input type="text" id="num-nombre" placeholder="Tal como aparece en tu acta de nacimiento"></div>
+      <div class="fg"><label>Fecha de Nacimiento</label><input type="date" id="num-fecha"></div>
+    </div>
+    <div class="carta-btns-row rv">
+      <button class="carta-btn" onclick="calcNumerologia()">✦ Calcular mis Números ✦</button>
+      <button class="carta-btn-clear" onclick="clearNumerologia()">↺ Reiniciar</button>
+    </div>
+    <div class="carta-loading" id="num-loading"><div class="carta-loading-ring"></div><p>Descifrando tu código numérico...</p></div>
+    <div class="carta-error" id="num-error"></div>
+    <div class="carta-result" id="num-result">
+      <div class="num-grid" id="num-grid"></div>
+      <div class="back-row" style="margin-top:0;border-top:none;padding-top:0">
+        <button class="info-cta" onclick="openModal('numerologia')">✦ Recibir mi Lectura Completa de Numerología ✦</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- AÑO PERSONAL -->
+<div class="tab-panel" id="num-anio-personal" data-module="modulo-numerologia" data-tab="num-anio-personal">
+  <div style="max-width:560px;margin:0 auto;text-align:center">
+    <div class="ch-diag-q rv"><strong>¿Qué energía rige tu año actual?</strong>El Año Personal se recalcula con tu fecha de nacimiento y el año en curso, dentro de un ciclo que se repite cada 9 años</div>
+    <div class="fg rv" style="max-width:280px;margin:0 auto 1.4rem">
+      <label>Fecha de Nacimiento</label>
+      <input type="date" id="num-year-fecha">
+    </div>
+    <button class="carta-btn rv" style="max-width:280px;margin:0 auto;display:block" onclick="calcAnioPersonal()">✦ Ver mi Año Personal ✦</button>
+    <div class="carta-error" id="num-year-error"></div>
+    <div class="num-year-result" id="num-year-result"></div>
+  </div>
+</div>
+
+  <!-- SIGNIFICADO DE LOS NÚMEROS -->
+<div class="tab-panel" id="num-significados" data-module="modulo-numerologia" data-tab="num-significados">
+  <div class="info-block rv" style="max-width:960px">
+    <span class="info-icon">🔢</span>
+    <h3>El Alfabeto Oculto de los Números</h3>
+    <p>La numerología pitagórica parte de una premisa simple: cada letra tiene un valor numérico oculto, y cada número —del 1 al 9— vibra con una energía arquetípica propia. No predicen el futuro: son un espejo, un lenguaje simbólico para nombrar patrones que muchas veces ya intuías sobre vos mismo.</p>
+    <div class="info-grid num-ref-grid">
+      <div class="ig-item"><h4>1 — El Iniciador</h4><p>El número de los comienzos. Vibra con la voluntad de abrir camino, la independencia y el coraje de decidir sin esperar permiso. Su sombra es el aislamiento cuando el liderazgo se vuelve control.</p></div>
+      <div class="ig-item"><h4>2 — El Diplomático</h4><p>El número de la unión. Vibra con la sensibilidad, la escucha y el arte de construir puentes donde otros solo ven distancia. Su sombra es la indecisión cuando el deseo de agradar apaga la propia voz.</p></div>
+      <div class="ig-item"><h4>3 — El Comunicador</h4><p>El número de la expresión. Vibra con la creatividad, la palabra y una alegría contagiosa que ilumina cualquier espacio. Su sombra es la dispersión cuando el talento se reparte en mil direcciones sin foco.</p></div>
+      <div class="ig-item"><h4>4 — El Constructor</h4><p>El número de la estructura. Vibra con el orden, la disciplina y una relación honesta con el trabajo sostenido en el tiempo. Su sombra es la rigidez cuando el control reemplaza la confianza.</p></div>
+      <div class="ig-item"><h4>5 — El Explorador</h4><p>El número del cambio. Vibra con la libertad, la curiosidad y una sed genuina de experiencias nuevas. Su sombra es la inquietud cuando el movimiento se convierte en huida.</p></div>
+      <div class="ig-item"><h4>6 — El Cuidador</h4><p>El número del amor responsable. Vibra con la entrega hacia la familia, la comunidad y el bienestar ajeno. Su sombra es el sacrificio excesivo cuando cuidar a otros borra el cuidado propio.</p></div>
+      <div class="ig-item"><h4>7 — El Buscador</h4><p>El número de la introspección. Vibra con el análisis, la espiritualidad y la necesidad de comprender lo que no se ve. Su sombra es el aislamiento cuando la mente se vuelve una fortaleza sin puertas.</p></div>
+      <div class="ig-item"><h4>8 — El Realizador</h4><p>El número del poder material. Vibra con la ambición, la autoridad y la capacidad de manifestar resultados tangibles. Su sombra es la dureza cuando el logro se persigue a cualquier costo.</p></div>
+      <div class="ig-item"><h4>9 — El Sabio</h4><p>El número del cierre de ciclos. Vibra con la compasión universal, el idealismo y la sabiduría de quien ya ha vivido mucho. Su sombra es el desapego cuando la entrega a todos deja poco espacio para uno mismo.</p></div>
+    </div>
+    <button class="info-cta" onclick="activateTab('modulo-numerologia','num-calculadora')">✦ Calcular mis Propios Números ✦</button>
+  </div>
+</div>
+
+  <!-- NÚMEROS MAESTROS -->
+<div class="tab-panel" id="num-maestros" data-module="modulo-numerologia" data-tab="num-maestros" style="background:linear-gradient(180deg,var(--abyss) 0%,rgba(10,5,25,.95) 100%)">
+  <div class="info-block rv" style="max-width:960px">
+    <span class="info-icon">✦</span>
+    <h3>Cuando el Número se Niega a Reducirse</h3>
+    <p>Algunos números se niegan a reducirse a un solo dígito: el 11, el 22 y el 33. La tradición numerológica los llama <strong>Números Maestros</strong> — vibraciones más intensas, con mayor potencial y también mayor exigencia interior. Si alguno de tus números personales resultó ser uno de estos tres, no es casualidad: es una invitación a un camino más elevado, y también más desafiante.</p>
+    <div class="num-grid">
+      <div class="num-card master"><span class="num-master-badge">Número Maestro</span><div class="num-big">11</div><p class="num-label">El Iluminado</p><p class="num-txt">Una vibración de intuición elevada y percepción casi profética. Quien lo porta suele sentir dos fuerzas: la inspiración que quiere elevarlo, y la inseguridad que le pide esconderse. Su tarea es aprender a sostener su propia luz sin apagarla por miedo.</p></div>
+      <div class="num-card master"><span class="num-master-badge">Número Maestro</span><div class="num-big">22</div><p class="num-label">El Maestro Constructor</p><p class="num-txt">Combina la visión del 11 con la capacidad práctica del 4: el poder de convertir un sueño enorme en una estructura real y duradera. Su tarea es no dejar que el peso de una misión tan grande lo paralice.</p></div>
+      <div class="num-card master"><span class="num-master-badge">Número Maestro</span><div class="num-big">33</div><p class="num-label">El Maestro Sanador</p><p class="num-txt">La vibración más elevada de las tres: entrega compasiva, enseñanza y amor incondicional puestos al servicio de otros, sin esperar nada a cambio. Su tarea es aprender a recibir tanto como da.</p></div>
+    </div>
+    <button class="info-cta" onclick="openModal('numerologia')">✦ Descubrir si tengo un Número Maestro ✦</button>
+  </div>
+</div>
 
   <div class="back-row"><a href="#hero" class="btn-back">↑ Volver al inicio</a></div>
 </section>
@@ -1377,6 +1488,7 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
   <ul class="f-links">
     <li><a href="#modulo-tarot">Tarot</a></li>
     <li><a href="#modulo-astrologia">Astrología</a></li>
+    <li><a href="#modulo-numerologia">Numerología</a></li>
     <li><a href="#modulo-chamanismo">Chamanismo</a></li>
     <li><a href="#modulo-akashicos">Registros Akásicos</a></li>
     <li><a href="#modulo-sanacion">Espacio de Sanación</a></li>
@@ -1416,6 +1528,7 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
         <select id="m-svc" style="display:none">
           <option value="">Tipo de sesión</option>
           <option value="carta">Carta Natal + Tarot — $90 USD</option>
+          <option value="numerologia">Lectura de Numerología — $65 USD</option>
           <option value="pend">Alineación con Péndulo — $75 USD</option>
           <option value="limpieza">Limpieza Chamánica — $110 USD</option>
           <option value="revolucion">Revolución Solar — $65 USD</option>
@@ -2731,6 +2844,133 @@ function consultPend(){PS={angle:.48,vel:0,swing:true,mode:Math.random()>.5?'cir
 function showPendAns(){PS.ans=true;const a=['Sí ✦ La energía fluye a tu favor','No ✦ El momento aún no es propicio','Sí ✦ Confía en tu intuición','Neutro ✦ Reflexiona más profundo','Sí ✦ El universo te sostiene'];const el=$('pend-ans');el.textContent=a[Math.floor(Math.random()*a.length)];el.classList.add('show')}
 
 // ═══════════════════════════════════════
+// NUMEROLOGÍA — sistema pitagórico (nombre + fecha de nacimiento)
+// ═══════════════════════════════════════
+const NUM_LETTER_VAL={a:1,b:2,c:3,d:4,e:5,f:6,g:7,h:8,i:9,j:1,k:2,l:3,m:4,n:5,o:6,p:7,q:8,r:9,s:1,t:2,u:3,v:4,w:5,x:6,y:7,z:8};
+function numStripAccents(s){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'')}
+// Preserva los números maestros (11, 22, 33) en cada etapa de la reducción,
+// tal como hace la numerología pitagórica tradicional — incluso al reducir
+// un componente de la fecha (ej. el día 22) o una suma parcial de letras.
+function numReduce(n){
+  while(n>9){
+    if(n===11||n===22||n===33)return n;
+    n=String(n).split('').reduce((a,c)=>a+Number(c),0);
+  }
+  return n;
+}
+function numNameSum(name,mode){
+  const clean=numStripAccents(name).toLowerCase().replace(/ñ/g,'n').replace(/[^a-z]/g,'');
+  let sum=0;
+  for(const ch of clean){
+    const isVowel='aeiou'.includes(ch);
+    if(mode==='vowels'&&!isVowel)continue;
+    if(mode==='consonants'&&isVowel)continue;
+    sum+=NUM_LETTER_VAL[ch]||0;
+  }
+  return numReduce(sum);
+}
+function numLifePath(dateStr){
+  const[y,m,d]=dateStr.split('-').map(Number);
+  return numReduce(numReduce(m)+numReduce(d)+numReduce(y));
+}
+function numPersonalYear(dateStr,year){
+  const[,m,d]=dateStr.split('-').map(Number);
+  return numReduce(numReduce(m)+numReduce(d)+numReduce(year));
+}
+const NUM_ESSENCE={
+  1:{kw:'Liderazgo · Independencia · Inicio',txt:'la fuerza del pionero: la capacidad de comenzar, decidir y abrir camino en soledad si hace falta.'},
+  2:{kw:'Cooperación · Sensibilidad · Diplomacia',txt:'el arte de la unión: escuchar, mediar y construir puentes donde otros solo ven distancia.'},
+  3:{kw:'Expresión · Creatividad · Alegría',txt:'el don de la palabra y el arte: comunicar, crear e inspirar con una energía luminosa y sociable.'},
+  4:{kw:'Estructura · Disciplina · Trabajo',txt:'la mano que construye: orden, constancia y una relación honesta con el esfuerzo sostenido.'},
+  5:{kw:'Libertad · Cambio · Aventura',txt:'el impulso de moverse: curiosidad, adaptabilidad y una sed genuina de experiencias nuevas.'},
+  6:{kw:'Amor · Responsabilidad · Servicio',txt:'la vocación de cuidar: familia, comunidad y una entrega natural hacia el bienestar de otros.'},
+  7:{kw:'Introspección · Sabiduría · Misterio',txt:'la búsqueda interior: análisis, espiritualidad y una necesidad profunda de comprender lo invisible.'},
+  8:{kw:'Poder · Abundancia · Logro',txt:'el dominio material: ambición, autoridad y la capacidad de manifestar resultados tangibles.'},
+  9:{kw:'Compasión · Sabiduría Universal · Cierre',txt:'la entrega humanitaria: idealismo, generosidad y la sabiduría de quien ha vivido muchos ciclos.'},
+  11:{kw:'Número Maestro · Intuición · Iluminación',txt:'una energía maestra de visión e inspiración: percepción elevada, que exige aprender a sostener la propia luz.',master:true},
+  22:{kw:'Número Maestro · Constructor · Visión',txt:'una energía maestra de manifestación: la capacidad de convertir sueños grandes en estructuras reales y duraderas.',master:true},
+  33:{kw:'Número Maestro · Maestro Sanador',txt:'una energía maestra de entrega compasiva: sanación, enseñanza y amor incondicional puestos al servicio de otros.',master:true}
+};
+const NUM_PERSONAL_YEAR={
+  1:'Un año de comienzos: siembra proyectos nuevos, toma la iniciativa, es momento de plantar semillas.',
+  2:'Un año de paciencia y vínculos: coopera, escucha, deja que las cosas maduren sin forzar el ritmo.',
+  3:'Un año de expresión: comunica, crea, sal al mundo — la energía social y creativa está de tu lado.',
+  4:'Un año de trabajo y cimientos: ordena, construye estructura, sé constante aunque el avance se sienta lento.',
+  5:'Un año de cambio: viajes, decisiones, movimiento — suelta lo que ya no encaja y abrázate a lo nuevo.',
+  6:'Un año de responsabilidad y hogar: familia, compromisos, sanar vínculos y cuidar lo que amas.',
+  7:'Un año de introspección: retírate, estudia, escucha tu voz interior más que el ruido de afuera.',
+  8:'Un año de poder y resultados: es momento de cosechar, negociar y asumir tu autoridad con responsabilidad.',
+  9:'Un año de cierre: suelta, perdona, agradece — se completa un ciclo de nueve años para abrir uno nuevo.',
+  11:'Un año de vibración maestra: revelaciones, intuición elevada y la posibilidad de inspirar a otros con tu visión — no fuerces, deja que la claridad llegue.',
+  22:'Un año de vibración maestra: la energía de construir algo grande y duradero — es tiempo de convertir visión en estructura real.',
+  33:'Un año de vibración maestra: entrega, enseñanza y sanación a través del amor incondicional hacia los demás.'
+};
+let numData=null;
+function calcNumerologia(){
+  const nombre=($('num-nombre')||{}).value||'';
+  const fecha=($('num-fecha')||{}).value||'';
+  const err=$('num-error'),loading=$('num-loading'),result=$('num-result');
+  err.classList.remove('show');result.classList.remove('show');
+  if(!nombre.trim()){err.textContent='Por favor escribe tu nombre completo.';err.classList.add('show');return}
+  if(!fecha){err.textContent='Por favor selecciona tu fecha de nacimiento.';err.classList.add('show');return}
+  const lettersOnly=numStripAccents(nombre).toLowerCase().replace(/ñ/g,'n').replace(/[^a-z]/g,'');
+  if(!lettersOnly){err.textContent='Ese nombre no tiene letras reconocibles — probá escribirlo de nuevo.';err.classList.add('show');return}
+  loading.classList.add('show');
+  setTimeout(()=>{
+    loading.classList.remove('show');
+    numData={
+      nombre,fecha,
+      lifePath:numLifePath(fecha),
+      expression:numNameSum(nombre,'all'),
+      soul:numNameSum(nombre,'vowels'),
+      personality:numNameSum(nombre,'consonants'),
+      birthday:numReduce(parseInt(fecha.split('-')[2],10))
+    };
+    renderNumerologiaResult();
+    result.classList.add('show');
+  },650);
+}
+function renderNumerologiaResult(){
+  if(!numData)return;
+  const cards=[
+    {n:numData.lifePath,label:'Camino de Vida',frame:'La lección central que viniste a vivir en esta existencia'},
+    {n:numData.expression,label:'Número de Expresión',frame:'El talento natural que traés para manifestar en el mundo'},
+    {n:numData.soul,label:'Número del Alma',frame:'El deseo más profundo que mueve tu corazón, aunque no siempre lo digas en voz alta'},
+    {n:numData.personality,label:'Número de Personalidad',frame:'La primera impresión que proyectás ante los demás'},
+    {n:numData.birthday,label:'Número del Día',frame:'Un talento adicional, propio del día exacto en que naciste'}
+  ];
+  $('num-grid').innerHTML=cards.map(c=>{
+    const e=NUM_ESSENCE[c.n]||{kw:'',txt:''};
+    return '<div class="num-card'+(e.master?' master':'')+'">'+
+      (e.master?'<span class="num-master-badge">Número Maestro</span>':'')+
+      '<div class="num-big">'+c.n+'</div>'+
+      '<p class="num-label">'+c.label+'</p>'+
+      '<p class="num-kw">'+e.kw+'</p>'+
+      '<p class="num-txt">'+c.frame+': '+e.txt+'</p>'+
+    '</div>';
+  }).join('');
+}
+function clearNumerologia(){
+  if($('num-nombre'))$('num-nombre').value='';
+  if($('num-fecha'))$('num-fecha').value='';
+  $('num-result').classList.remove('show');
+  $('num-error').classList.remove('show');
+  numData=null;
+}
+function calcAnioPersonal(){
+  const fecha=($('num-year-fecha')||{}).value||'';
+  const err=$('num-year-error'),res=$('num-year-result');
+  err.classList.remove('show');res.classList.remove('show');
+  if(!fecha){err.textContent='Por favor selecciona tu fecha de nacimiento.';err.classList.add('show');return}
+  const year=new Date().getFullYear();
+  const py=numPersonalYear(fecha,year);
+  const txt=NUM_PERSONAL_YEAR[py]||'';
+  res.innerHTML='<p class="num-year-label">Tu Año Personal '+year+'</p><div class="num-year-big">'+py+'</div><p class="num-year-txt">'+txt+'</p>'+
+    '<button class="info-cta" onclick="openModal(\'numerologia\')" style="margin-top:.6rem">✦ Profundizar en mi Ciclo Anual ✦</button>';
+  res.classList.add('show');
+}
+
+// ═══════════════════════════════════════
 // CHAKRAS — Sistema Interactivo Completo
 // ═══════════════════════════════════════
 
@@ -3314,7 +3554,7 @@ document.addEventListener('click',(e)=>{
 });
 initDD('svc');initDD('mod');
 function openModal(svc){
-  const labels={carta:['Carta Natal + Tarot','Lectura profunda de tu mapa estelar y los arquetipos'],pend:['Alineación con Péndulo','Diagnóstico y reequilibrio de tu campo energético'],limpieza:['Limpieza Chamánica','Ritual sagrado de transmutación y apertura de caminos'],revolucion:['Revolución Solar','El mapa energético de tu nuevo año, desde tu cumpleaños'],munay:['Iniciación Munay-Ki','Los 9 ritos energéticos de los chamanes Q\'ero'],animales:['Animales de Poder','Encuentra al espíritu guardián que te presta su medicina'],akashicos:['Lectura de Registros Akásicos','Conexión con la memoria universal de tu alma'],pleyadiana:['Sanación Pleyadiana','Códigos de luz para equilibrar tu campo áurico'],alma:['Informe del Alma','Un retrato escrito y personalizado de tu esencia'],bloqueos:['Limpieza de Bloqueos Energéticos','Libera la energía estancada en tu campo'],psicogenealogia:['Psicogenealogía','El mapa emocional de tu árbol genealógico'],kundalini:['Activación Kundalini','El fuego dormido en tu raíz, despierto con respeto']};
+  const labels={carta:['Carta Natal + Tarot','Lectura profunda de tu mapa estelar y los arquetipos'],numerologia:['Lectura de Numerología','El mensaje oculto en tu nombre y tu fecha de nacimiento'],pend:['Alineación con Péndulo','Diagnóstico y reequilibrio de tu campo energético'],limpieza:['Limpieza Chamánica','Ritual sagrado de transmutación y apertura de caminos'],revolucion:['Revolución Solar','El mapa energético de tu nuevo año, desde tu cumpleaños'],munay:['Iniciación Munay-Ki','Los 9 ritos energéticos de los chamanes Q\'ero'],animales:['Animales de Poder','Encuentra al espíritu guardián que te presta su medicina'],akashicos:['Lectura de Registros Akásicos','Conexión con la memoria universal de tu alma'],pleyadiana:['Sanación Pleyadiana','Códigos de luz para equilibrar tu campo áurico'],alma:['Informe del Alma','Un retrato escrito y personalizado de tu esencia'],bloqueos:['Limpieza de Bloqueos Energéticos','Libera la energía estancada en tu campo'],psicogenealogia:['Psicogenealogía','El mapa emocional de tu árbol genealógico'],kundalini:['Activación Kundalini','El fuego dormido en tu raíz, despierto con respeto']};
   const l=labels[svc]||['Agendar Sesión','Completa tus datos para reservar tu espacio sagrado'];
   $('m-title').textContent=l[0];$('m-sub').textContent=l[1];
   if(svc&&$('m-svc'))$('m-svc').value=svc;
