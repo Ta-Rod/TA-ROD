@@ -124,9 +124,19 @@ section{position:relative;z-index:1;padding:6rem 4rem}
 .casas-wrap{width:100%;max-width:680px}
 .casas-head{font-size:.52rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gd);margin-bottom:.7rem;text-align:center}
 .casas-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:.4rem}
-.casa-cell{padding:.45rem .3rem;border:1px solid var(--br);background:rgba(201,168,76,.02);text-align:center}
+.casa-cell{padding:.45rem .3rem;border:1px solid var(--br);background:rgba(201,168,76,.02);text-align:center;cursor:pointer;transition:all .25s}
+.casa-cell:hover{border-color:var(--bb);background:rgba(201,168,76,.09)}
 .casa-num{font-size:.48rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gd);display:block;margin-bottom:.2rem}
 .casa-val{font-family:'Cormorant Garamond',serif;font-size:.78rem;color:var(--tp)}
+.casa-modal-ov{position:fixed;inset:0;background:rgba(7,7,26,.95);z-index:1000;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;padding:1.2rem}
+.casa-modal-ov.on{opacity:1;pointer-events:all}
+.casa-modal{max-width:460px;width:100%;border:1px solid var(--bb);background:var(--dp);padding:2.2rem 2.2rem 1.8rem;position:relative;transform:translateY(14px);transition:transform .3s;max-height:85vh;overflow-y:auto}
+.casa-modal-ov.on .casa-modal{transform:translateY(0)}
+.casa-modal-close{position:absolute;top:.8rem;right:1.1rem;background:none;border:none;color:var(--tm);font-size:1.1rem;cursor:pointer;transition:color .3s}
+.casa-modal-close:hover{color:var(--gl)}
+.casa-modal-eyebrow{font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gd);margin-bottom:.5rem}
+.casa-modal h3{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--gl);margin-bottom:1rem}
+.casa-modal p{font-family:'Cormorant Garamond',serif;font-size:1.02rem;color:var(--tp);line-height:1.75}
 .elem-summary{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;width:100%;padding:1rem 0;border-top:1px solid var(--br)}
 .es-item{text-align:center}
 .es-count{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--gold);display:block}
@@ -1600,6 +1610,15 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
     </div>
   </div>
 </div>
+<!-- MODAL CASA (Carta Natal) -->
+<div class="casa-modal-ov" id="casa-modal-ov" onclick="if(event.target===this)closeCasaModal()">
+  <div class="casa-modal">
+    <button class="casa-modal-close" onclick="closeCasaModal()">✕</button>
+    <p class="casa-modal-eyebrow" id="casa-modal-eyebrow"></p>
+    <h3 id="casa-modal-title"></h3>
+    <p id="casa-modal-text"></p>
+  </div>
+</div>
   <!-- MODAL ARCANO MENOR -->
 <div id="amm-overlay" onclick="if(event.target===this)this.classList.remove('on')">
   <div class="am-modal">
@@ -2617,7 +2636,7 @@ function renderCarta(data){
   });
   // Casas
   const cg=$('casas-grid');cg.innerHTML='';
-  for(let i=1;i<=12;i++){const lon=houses[i];if(lon===undefined)continue;const pos=degToSignPos(lon);const cell=document.createElement('div');cell.className='casa-cell';cell.innerHTML='<span class="casa-num">Casa '+i+'</span><span class="casa-val">'+SIGN_SYMS[pos.signIdx]+' '+pos.deg+'°</span>';cg.appendChild(cell)}
+  for(let i=1;i<=12;i++){const lon=houses[i];if(lon===undefined)continue;const pos=degToSignPos(lon);const signName=SIGN_NAMES[pos.signIdx];const cell=document.createElement('div');cell.className='casa-cell';cell.innerHTML='<span class="casa-num">Casa '+i+'</span><span class="casa-val">'+SIGN_SYMS[pos.signIdx]+' '+pos.deg+'°</span>';cell.onclick=()=>openCasaModal(i,signName,pos.deg,pos.min);cg.appendChild(cell)}
   // Elementos
   const elemCount={fuego:0,tierra:0,aire:0,agua:0};
   ['sun','moon','mercury','venus','mars','jupiter','saturn'].forEach(k=>{const lon=positions[k];if(lon===undefined)return;const sName=SIGN_NAMES[degToSignPos(lon).signIdx];const elem=SIGN_ELEM[sName];if(elem)elemCount[elem]++});
@@ -2814,6 +2833,20 @@ function renderNatalReading(data){
   el.innerHTML=html;
   setupReveal();
 }
+
+// ═══════════════════════════════════════
+// MODAL — significado de cada Casa al hacer click en la casilla
+// ═══════════════════════════════════════
+const HOUSE_ANGLE_NOTE={1:'Ascendente',4:'Fondo del Cielo (IC)',7:'Descendente',10:'Medio Cielo (MC)'};
+function openCasaModal(houseNum,signName,deg,min){
+  const angleNote=HOUSE_ANGLE_NOTE[houseNum]?' — '+HOUSE_ANGLE_NOTE[houseNum]:'';
+  $('casa-modal-eyebrow').textContent='Casa '+houseNum+angleNote;
+  $('casa-modal-title').textContent=SIGN_SYMS[SIGN_NAMES.indexOf(signName)]+' '+signName+' '+deg+'°'+String(min).padStart(2,'0')+'′';
+  $('casa-modal-text').textContent='Esta casa rige '+HOUSE_MEANINGS[houseNum-1]+'. Con '+signName+' aquí, abordas esta área con '+SIGN_KEYWORD_TEXT[signName];
+  $('casa-modal-ov').classList.add('on');
+  document.body.style.overflow='hidden';
+}
+function closeCasaModal(){$('casa-modal-ov').classList.remove('on');document.body.style.overflow=''}
 
 // ── Rueda Natal Profesional estilo Astro-Seek ──
 function drawCartaWheelPro(positions,houses){
