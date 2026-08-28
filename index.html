@@ -526,6 +526,24 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
   .tab-btn{font-size:.58rem;padding:.65rem 1.1rem}
 }
 
+/* LECTURA NARRATIVA DE CARTA NATAL */
+.nr-wrap{margin-top:3rem;padding-top:2.2rem;border-top:1px solid var(--br);display:flex;flex-direction:column;gap:2.4rem}
+.nr-main-title{font-family:'Playfair Display',serif;color:var(--gold);font-size:1.6rem;text-align:center;margin-bottom:.8rem}
+.nr-eyebrow{font-size:.58rem;letter-spacing:.35em;text-transform:uppercase;color:var(--gd);margin-bottom:.3rem}
+.nr-h{font-family:'Playfair Display',serif;color:var(--gl);font-size:1.25rem;margin-bottom:.7rem}
+.nr-p{font-family:'Cormorant Garamond',serif;font-size:1.05rem;color:var(--tp);line-height:1.7;margin-bottom:.7rem}
+.nr-card{background:rgba(201,168,76,.06);border:1px solid var(--br);border-radius:14px;padding:.9rem 1.2rem;margin-bottom:.6rem;font-family:'Cormorant Garamond',serif;font-size:1rem;color:var(--tp);line-height:1.6}
+.nr-card b{color:var(--gold);font-family:'Inter',sans-serif;font-size:.85rem;letter-spacing:.03em}
+.nr-bar-row{display:flex;align-items:center;gap:.7rem;margin-bottom:.5rem}
+.nr-bar-label{width:100px;flex-shrink:0;font-size:.68rem;color:var(--ts);text-transform:uppercase;letter-spacing:.08em}
+.nr-bar-track{flex:1;height:12px;background:rgba(255,255,255,.05);border-radius:7px;overflow:hidden}
+.nr-bar-fill{height:100%;background:linear-gradient(90deg,var(--gd),var(--gold));border-radius:7px}
+.nr-bar-pct{width:52px;flex-shrink:0;text-align:right;font-size:.7rem;color:var(--gl)}
+.nr-aspects-list{display:flex;flex-direction:column;gap:.35rem;max-height:340px;overflow-y:auto;padding-right:.4rem}
+.nr-aspect-row{display:grid;grid-template-columns:1fr auto 1fr auto;gap:.6rem;align-items:center;font-size:.78rem;color:var(--ts);border-bottom:1px solid var(--br);padding:.4rem 0}
+.nr-aspect-glyph{color:var(--gold);text-align:center;white-space:nowrap}
+.nr-aspect-orb{color:var(--tm);font-size:.68rem;text-align:right;white-space:nowrap}
+
 /* CIELO EN VIVO — portal */
 .cielo-portal{display:flex;flex-direction:column;align-items:center;gap:1.4rem;margin-top:1rem}
 .cielo-section{position:relative;overflow:hidden}
@@ -986,6 +1004,8 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
       </div>
       <!-- elementos -->
       <div class="elem-summary" id="elem-summary"></div>
+      <!-- lectura narrativa -->
+      <div id="natal-reading"></div>
     </div>
   </div></div>
 
@@ -2268,6 +2288,119 @@ const SIGN_NAMES=['Aries','Tauro','Géminis','Cáncer','Leo','Virgo','Libra','Es
 const SIGN_ELEM={Aries:'fuego',Tauro:'tierra',Géminis:'aire','Cáncer':'agua',Leo:'fuego',Virgo:'tierra',Libra:'aire',Escorpio:'agua',Sagitario:'fuego',Capricornio:'tierra',Acuario:'aire',Piscis:'agua'};
 const ELEM_ICONS={fuego:'🔥',tierra:'🌿',aire:'🌬️',agua:'🌊'};
 
+// ═══════════════════════════════════════
+// LECTURA NARRATIVA DE CARTA NATAL — datos base
+// (se apoya en las mismas posiciones/casas ya calculadas por el motor
+// astronómico; no inventa nada, solo interpreta lo ya calculado)
+// ═══════════════════════════════════════
+const SIGN_MODALITY={Aries:'cardinal',Tauro:'fijo',Géminis:'mutable','Cáncer':'cardinal',Leo:'fijo',Virgo:'mutable',Libra:'cardinal',Escorpio:'fijo',Sagitario:'mutable',Capricornio:'cardinal',Acuario:'fijo',Piscis:'mutable'};
+const MODE_NAMES={cardinal:'Cardinal',fijo:'Fijo',mutable:'Mutable'};
+const SIGN_RULER_MODERN={Aries:'mars',Tauro:'venus',Géminis:'mercury','Cáncer':'moon',Leo:'sun',Virgo:'mercury',Libra:'venus',Escorpio:'pluto',Sagitario:'jupiter',Capricornio:'saturn',Acuario:'uranus',Piscis:'neptune'};
+const ASPECT_SYM={Conjunción:'☌',Oposición:'☍',Trígono:'△',Cuadratura:'□',Sextil:'⚹',Quincuncio:'⚻'};
+// Casa → tema de vida (índice 0 = Casa 1)
+const HOUSE_MEANINGS=[
+  'tu identidad, tu cuerpo y la manera en que inicias todo lo que emprendes',
+  'tus valores, tus recursos y tu relación con la abundancia material',
+  'tu comunicación, tu mente cotidiana y tus vínculos cercanos (hermanos, vecinos, estudios)',
+  'tu hogar, tus raíces familiares y tu mundo emocional más íntimo',
+  'tu creatividad, el goce, el romance y tu niño interior',
+  'tu rutina diaria, tu trabajo cotidiano, tu salud y tu vocación de servicio',
+  'tus relaciones de pareja, tus sociedades y tus vínculos uno a uno',
+  'la transformación, lo compartido y los procesos de muerte y renacimiento del alma',
+  'la filosofía, los viajes del espíritu y la búsqueda de un sentido mayor',
+  'tu vocación pública, tu carrera y la huella que dejas en el mundo',
+  'tus proyectos a futuro, tus amistades y las comunidades que te sostienen',
+  'tu mente subconsciente, la espiritualidad, la soledad y lo que permanece oculto en ti'
+];
+const NATURAL_SIGN_HOUSE=['Aries','Tauro','Géminis','Cáncer','Leo','Virgo','Libra','Escorpio','Sagitario','Capricornio','Acuario','Piscis'];
+const SIGN_KEYWORD_TEXT={
+  Aries:'una fuerte impronta de iniciativa: actúas primero y reflexionas después, con el coraje como tu principal herramienta.',
+  Tauro:'una conexión estable con lo sensorial: buscas seguridad, placer y resultados que perduren en el tiempo.',
+  Géminis:'una mente curiosa y versátil: aprendes rápido y necesitas variedad de estímulos e intercambio constante.',
+  Cáncer:'una sensibilidad profunda: proteges lo tuyo con instinto y necesitas un espacio emocional seguro.',
+  Leo:'una expresión generosa y magnética: necesitas brillar con el corazón y ser reconocido/a por lo que creas.',
+  Virgo:'una mirada analítica y de servicio: perfeccionas los detalles y encuentras sentido en ser útil.',
+  Libra:'una búsqueda constante de equilibrio: necesitas armonía y te defines en relación con el otro.',
+  Escorpio:'una intensidad transformadora: no temes ir a las profundidades y renacer de tus propias cenizas.',
+  Sagitario:'una sed de horizontes amplios: la filosofía, los viajes y la verdad son tu combustible.',
+  Capricornio:'una disciplina firme: construyes con paciencia y la maestría es tu forma de trascender.',
+  Acuario:'una visión adelantada a su tiempo: piensas en colectivo y valoras la libertad por encima de todo.',
+  Piscis:'una fuerte conexión espiritual: tu intuición te guía y puedes poseer una sensibilidad casi psíquica.'
+};
+const RULER_HOUSE_TEXT=[
+  'tienes una identidad fuerte y directa: te defines a través de la acción y de cómo te presentas al mundo.',
+  'tu sentido de quién eres está ligado a lo que valoras y posees; construir seguridad material es parte de tu camino.',
+  'aprendes quién eres a través del intercambio de ideas y del contacto constante con tu entorno cercano.',
+  'tu identidad está profundamente enraizada en tu hogar y tu linaje familiar; necesitas un refugio emocional seguro.',
+  'te defines por tu expresión creativa; brillar y compartir tu don es parte esencial de tu propósito.',
+  'encuentras tu identidad en el servicio útil y en el cuidado del cuerpo y de la rutina bien hecha.',
+  'te descubres a ti mismo/a a través del espejo de tus relaciones y de tus vínculos más cercanos.',
+  'tu camino pasa por la transformación profunda, por soltar lo viejo y renacer una y otra vez.',
+  'tu identidad se expande buscando sentido: la filosofía, los viajes o los estudios superiores te definen.',
+  'te reconoces en tu vocación pública; construir una carrera sólida es parte central de tu propósito.',
+  'tu identidad se nutre de comunidad, de proyectos colectivos y de una visión de futuro compartida.',
+  'tienes una naturaleza profundamente introspectiva e intuitiva; prefieres el trabajo silencioso detrás de escena, y tu sensibilidad, aunque poderosa, puede resultar abrumadora si no la cuidas.'
+];
+const ASC_SIGN_TEXT={
+  Aries:'Siendo Aries tu ascendente, te presentas con energía directa y un aire de pionero/a. Tu actitud transmite dinamismo; actúas primero y preguntas después, y tu primera impresión suele ser de valentía.',
+  Tauro:'Siendo Tauro tu ascendente, irradias calma y solidez. Tu presencia transmite calidez sensorial y estabilidad; te tomas la vida con paciencia y prefieres construir antes que improvisar.',
+  Géminis:'Siendo Géminis tu ascendente, te muestras curioso/a, ágil y conversador/a. Tu mente rápida es tu primera carta de presentación, y tu entorno suele percibirte como versátil y siempre en movimiento.',
+  Cáncer:'Siendo Cáncer tu ascendente, irradias calidez y cariño. Tu presencia es típicamente suave y acogedora. La empatía es tu punto fuerte, lo que te permite comprender y apoyar a los demás sin esfuerzo.',
+  Leo:'Siendo Leo tu ascendente, te presentas con un porte cálido y magnético. Hay una calidad solar en tu presencia; la gente suele notarte apenas entras a un lugar y responde bien a tu generosidad natural.',
+  Virgo:'Siendo Virgo tu ascendente, te muestras cuidadoso/a, ordenado/a y observador/a. Tu presencia transmite atención al detalle; la gente confía en tu criterio práctico y tu disposición a ayudar.',
+  Libra:'Siendo Libra tu ascendente, irradias encanto y sentido estético. Buscas la armonía en cada interacción, y tu presencia suele generar simpatía y deseo de colaboración en quienes te rodean.',
+  Escorpio:'Siendo Escorpio tu ascendente, tu presencia tiene una intensidad magnética difícil de ignorar. Observas más de lo que hablas, y quienes te conocen perciben una profundidad callada en tu mirada.',
+  Sagitario:'Siendo Sagitario tu ascendente, te muestras optimista, franco/a y aventurero/a. Tu presencia transmite amplitud de miras, y sueles inspirar a otros a ver la vida con más humor y perspectiva.',
+  Capricornio:'Siendo Capricornio tu ascendente, proyectas seriedad y autoridad natural. Tu presencia transmite madurez incluso desde joven, y la gente suele confiarte responsabilidades con facilidad.',
+  Acuario:'Siendo Acuario tu ascendente, te muestras original, independiente y algo distante al principio. Tu presencia transmite una chispa distinta, y sueles ser recordado/a como alguien fuera de lo convencional.',
+  Piscis:'Siendo Piscis tu ascendente, irradias una sensibilidad suave y difusa. Tu presencia transmite empatía casi sin palabras, y la gente suele sentir que puede abrirse contigo con facilidad.'
+};
+const ELEMENT_NARRATIVE={
+  fuego:'Tienes preponderancia del elemento Fuego en tu carta natal. Te acercas a la vida con entusiasmo, acción e instinto. Necesitas espacio para expresarte, iniciar proyectos y sentir que avanzas; la pasión es tu combustible principal.',
+  tierra:'Tienes preponderancia del elemento Tierra en tu carta natal. Te acercas a la vida de forma práctica y concreta. Valoras la estabilidad, los resultados tangibles y el trabajo bien hecho; construir con paciencia es tu fortaleza.',
+  aire:'Tienes preponderancia del elemento Aire en tu carta natal. Te acercas a la vida a través de las ideas, la comunicación y el intercambio social. Necesitas estímulo mental constante y espacio para pensar y relacionarte con libertad.',
+  agua:'Tienes preponderancia del elemento Agua en tu carta natal. Te pone en contacto con tus sentimientos. Te acercas a la vida y la entiendes a través de tus emociones. Las relaciones emocionales cercanas son esenciales para tu bienestar y felicidad.'
+};
+const MODALITY_NARRATIVE={
+  cardinal:'La modalidad Cardinal predomina en tu carta: eres quien inicia. Te sientes cómodo/a comenzando proyectos, tomando la delantera y abriendo caminos nuevos, aunque sostenerlos en el tiempo pueda requerir un esfuerzo extra.',
+  fijo:'La modalidad Fija predomina en tu carta: eres quien sostiene. Tienes una capacidad notable de concentración y perseverancia; una vez que te comprometes con algo, es difícil hacerte cambiar de rumbo.',
+  mutable:'La modalidad Mutable predomina en tu carta: eres quien se adapta. Fluyes con los cambios de la vida con facilidad y versatilidad, aunque a veces cueste sostener una sola dirección por mucho tiempo.'
+};
+const NORTH_NODE_TEXT=[
+  'implica desarrollar tu propia identidad e independencia, aprender a ponerte primero sin culpa.',
+  'implica construir seguridad desde tus propios recursos y valores, y confiar en tu propia capacidad de sostenerte.',
+  'implica conectar con los demás, desarrollar habilidades de comunicación y centrarte en el aprendizaje práctico.',
+  'implica anclarte en tu hogar y tus raíces emocionales, permitiéndote sentir y pertenecer.',
+  'implica atreverte a crear y expresarte con autenticidad, incluso si eso significa exponerte.',
+  'implica ordenar tu vida cotidiana, cuidar tu cuerpo y ponerte al servicio de algo mayor que tú.',
+  'implica abrirte a la intimidad genuina y aprender a construir relaciones de igual a igual.',
+  'implica soltar el control y confiar en lo compartido: los recursos, la intimidad y la transformación con otros.',
+  'implica ampliar tu visión del mundo a través del estudio, los viajes o la búsqueda espiritual.',
+  'implica asumir responsabilidad pública y construir una vocación con disciplina y compromiso.',
+  'implica integrarte a comunidades y proyectos colectivos, soltando el protagonismo individual.',
+  'implica confiar en tu intuición y en tu mundo interior, y aceptar los tiempos de retiro como parte de tu camino.'
+];
+const SOUTH_NODE_TEXT=[
+  'señala un pasado centrado en el ego y la acción individual; ahora te toca aprender a compartir el protagonismo.',
+  'señala patrones de aferrarte a lo material o a la autosuficiencia extrema; suelta el miedo a no tener suficiente.',
+  'señala un pasado disperso en mil conversaciones o intereses; ahora te toca profundizar en lugar de dispersarte.',
+  'señala una tendencia a refugiarte en lo conocido y familiar; ahora te toca animarte a salir al mundo.',
+  'señala un hábito de buscar aprobación a través del brillo personal; ahora te toca crear sin necesidad de aplausos.',
+  'señala un exceso de control y perfeccionismo; ahora te toca soltar el detalle y confiar en el proceso.',
+  'señala haber dependido demasiado del otro para sentirte completo/a; ahora te toca fortalecer tu propio centro.',
+  'señala apego a los recursos propios y dificultad para soltar el control; ahora te toca aprender a compartir de verdad.',
+  'señala un pasado dedicado a la búsqueda de significado y la persecución de una gran visión, que puede haberte hecho sentir desconectado/a de quienes te rodean. Ahora te toca cambiar el enfoque de lo abstracto a lo concreto y encontrar plenitud en tu entorno cotidiano.',
+  'señala haber buscado siempre reconocimiento externo o estatus; ahora te toca definir el éxito en tus propios términos.',
+  'señala haber dependido de la aprobación del grupo; ahora te toca honrar tu camino individual dentro de la comunidad.',
+  'señala una tendencia al escapismo o al aislamiento excesivo; ahora te toca traer tu sensibilidad al mundo concreto, con los pies en la tierra.'
+];
+const HEMI_TEXT={
+  east:'El hemisferio oriental (casas 10-11-12-1-2-3) está enfatizado en tu carta natal. Eres una persona motivada, orientada a la acción y asertiva; tiendes a creer firmemente en tu propio libre albedrío.',
+  west:'El hemisferio occidental (casas 4-5-6-7-8-9) está enfatizado en tu carta natal. Tiendes a orientarte hacia el otro, a colaborar, y a dejar que las circunstancias y los vínculos guíen buena parte de tu camino.',
+  north:'El hemisferio norte (casas 1 a 6, bajo el horizonte) está enfatizado en tu carta natal; es la parte personal y subjetiva de la carta. Por eso tiendes a ser más reservado/a y a vivir hacia adentro.',
+  south:'El hemisferio sur (casas 7 a 12, sobre el horizonte) está enfatizado en tu carta natal; es la parte pública y objetiva de la carta. Por eso sueles ser una persona más saliente y orientada al mundo exterior.'
+};
+
 const PLANET_ORDER=[
   {key:'sun',sym:'☉',name:'Sol'},{key:'moon',sym:'☽',name:'Luna'},{key:'asc',sym:'⬆',name:'Ascendente'},
   {key:'mc',sym:'MC',name:'Medio Cielo'},{key:'mercury',sym:'☿',name:'Mercurio'},{key:'venus',sym:'♀',name:'Venus'},
@@ -2275,6 +2408,8 @@ const PLANET_ORDER=[
   {key:'uranus',sym:'⛢',name:'Urano'},{key:'neptune',sym:'♆',name:'Neptuno'},{key:'pluto',sym:'♇',name:'Plutón'},
   {key:'north_node',sym:'☊',name:'Nodo Norte'},{key:'lilith',sym:'⚸',name:'Lilith'},{key:'chiron',sym:'⚷',name:'Quirón'}
 ];
+const PLANET_NAME_BY_KEY={};const PLANET_SYM_BY_KEY={};
+PLANET_ORDER.forEach(p=>{PLANET_NAME_BY_KEY[p.key]=p.name;PLANET_SYM_BY_KEY[p.key]=p.sym});
 
 // Aspectos astrológicos
 const ASPECTS=[
@@ -2453,7 +2588,7 @@ async function calcCarta(){
     positions.asc=asc;positions.mc=mc;
     const houses=calcHousesPlacidus(obliq,geo.lat,ramc,asc,mc);
     for(const pKey of Object.keys(positions)){
-      if(pKey.includes('_'))continue;
+      if(pKey.endsWith('_house')||pKey.endsWith('_retro'))continue;
       let h=1;const pDeg=norm360(positions[pKey]);
       for(let i=1;i<=12;i++){const h1=norm360(houses[i]),h2=norm360(houses[(i%12)+1]);if(inHouseArc(pDeg,h1,h2)){h=i;break}}
       positions[pKey+'_house']=h;
@@ -2490,8 +2625,194 @@ function renderCarta(data){
   Object.entries(elemCount).forEach(([k,v])=>{const d=document.createElement('div');d.className='es-item';d.innerHTML='<span class="es-count">'+ELEM_ICONS[k]+' '+v+'x</span><span class="es-label">'+k.charAt(0).toUpperCase()+k.slice(1)+'</span>';es.appendChild(d)});
   // Rueda
   drawCartaWheelPro(positions,houses);
+  // Lectura narrativa (Gran Tres, elementos, modalidad, nodos, aspectos, stellium, regente, hemisferios)
+  try{renderNatalReading(data)}catch(e){console.error('Error generando la lectura narrativa:',e)}
   $('carta-result').classList.add('show');
   setTimeout(()=>$('carta-result').scrollIntoView({behavior:'smooth',block:'start'}),200);
+}
+
+// ═══════════════════════════════════════
+// LECTURA NARRATIVA DE CARTA NATAL — cálculos
+// ═══════════════════════════════════════
+const NR_BIG12=['sun','moon','asc','mc','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto'];
+const NR_PLANETS10=['sun','moon','mercury','venus','mars','jupiter','saturn','uranus','neptune','pluto'];
+
+function nrSignName(lon){return SIGN_NAMES[degToSignPos(lon).signIdx]}
+
+function nrElementModalityStats(positions){
+  const elemCount={fuego:0,tierra:0,aire:0,agua:0},modeCount={cardinal:0,fijo:0,mutable:0};
+  let total=0;
+  NR_BIG12.forEach(k=>{const lon=positions[k];if(lon===undefined)return;const s=nrSignName(lon);elemCount[SIGN_ELEM[s]]++;modeCount[SIGN_MODALITY[s]]++;total++});
+  const elemPct={},modePct={};
+  Object.keys(elemCount).forEach(k=>elemPct[k]=total?elemCount[k]/total*100:0);
+  Object.keys(modeCount).forEach(k=>modePct[k]=total?modeCount[k]/total*100:0);
+  return{elemCount,elemPct,modeCount,modePct,total};
+}
+
+function nrStelliums(positions){
+  const byHouse={};
+  NR_PLANETS10.forEach(k=>{const h=positions[k+'_house'];if(h===undefined)return;(byHouse[h]=byHouse[h]||[]).push(k)});
+  const out=[];
+  Object.keys(byHouse).forEach(h=>{if(byHouse[h].length>=3)out.push({house:+h,planets:byHouse[h]})});
+  out.sort((a,b)=>a.house-b.house);
+  return out;
+}
+
+function nrChartRuler(positions){
+  const ascSign=nrSignName(positions.asc);
+  const rulerKey=SIGN_RULER_MODERN[ascSign];
+  const rulerHouse=positions[rulerKey+'_house'];
+  return{ascSign,rulerKey,rulerHouse};
+}
+
+function nrNodeHouses(positions,houses){
+  const nnLon=positions.north_node,snLon=norm360(nnLon+180);
+  function findHouse(deg){for(let i=1;i<=12;i++){const h1=norm360(houses[i]),h2=norm360(houses[(i%12)+1]);if(inHouseArc(deg,h1,h2))return i}return positions.north_node_house||1}
+  return{nnHouse:positions.north_node_house||findHouse(nnLon),snHouse:findHouse(snLon)};
+}
+
+function nrHemispheres(positions){
+  let east=0,west=0,north=0,south=0,total=0;
+  NR_PLANETS10.forEach(k=>{const h=positions[k+'_house'];if(h===undefined)return;total++;
+    if([10,11,12,1,2,3].includes(h))east++;else west++;
+    if(h>=1&&h<=6)north++;else south++;
+  });
+  return{east,west,north,south,total};
+}
+
+function nrFmtPct(v){return(Math.round(v*10)/10)+'%'}
+
+// ═══════════════════════════════════════
+// LECTURA NARRATIVA DE CARTA NATAL — render
+// ═══════════════════════════════════════
+function nrBar(label,icon,pct){
+  return '<div class="nr-bar-row"><span class="nr-bar-label">'+icon+' '+label+'</span><div class="nr-bar-track"><div class="nr-bar-fill" style="width:'+Math.max(pct,1.5)+'%"></div></div><span class="nr-bar-pct">'+nrFmtPct(pct)+'</span></div>';
+}
+
+function nrSectionBigThree(sunSign,moonSign,ascSign){
+  const sunTxt=(PLANET_TIPS_MAP['☉']&&PLANET_TIPS_MAP['☉'][sunSign])||getPlanetTipFull('☉',sunSign);
+  const moonTxt=(PLANET_TIPS_MAP['☽']&&PLANET_TIPS_MAP['☽'][moonSign])||getPlanetTipFull('☽',moonSign);
+  const ascTxt=ASC_SIGN_TEXT[ascSign]||'';
+  let html='<div class="nr-block rv"><p class="nr-eyebrow">Tu Gran Tres</p><h3 class="nr-h">Sol · Luna · Ascendente</h3>'+
+    '<p class="nr-p">Tu "Gran Tres" está formado por tu signo solar, lunar y ascendente. El Sol es el núcleo de lo que eres — tus objetivos y tu sentido de identidad. La Luna es tu lado emocional — tus instintos y tu forma de reaccionar. El Ascendente es cómo te presentas al mundo y cómo te expresas en él.</p>'+
+    '<div class="nr-card"><b>☉ Sol en '+sunSign+'</b><br>'+sunTxt+'</div>'+
+    '<div class="nr-card"><b>⬆ Ascendente en '+ascSign+'</b><br>'+ascTxt+'</div>'+
+    '<div class="nr-card"><b>☽ Luna en '+moonSign+'</b><br>'+moonTxt+'</div>';
+  if(sunSign===moonSign&&moonSign===ascSign){
+    html+='<p class="nr-p"><em>Con tus tres pilares reunidos en '+sunSign+', esta energía se concentra e intensifica: es la nota dominante de toda tu carta.</em></p>';
+  }
+  html+='</div>';
+  return html;
+}
+
+function nrSectionElements(stats){
+  const dom=Object.keys(stats.elemPct).reduce((a,b)=>stats.elemPct[a]>=stats.elemPct[b]?a:b);
+  let html='<div class="nr-block rv"><p class="nr-eyebrow">Energía elemental</p><h3 class="nr-h">Los 4 Elementos</h3>'+
+    '<p class="nr-p">Tu funcionamiento interno está influido por el equilibrio de cuatro elementos: el Fuego enciende tus acciones, la Tierra te enraíza, el Aire inspira tu mente y el Agua guía tus emociones. (Calculado sobre tus 10 planetas + Ascendente + Medio Cielo.)</p>'+
+    nrBar('Fuego','🔥',stats.elemPct.fuego)+nrBar('Tierra','🌿',stats.elemPct.tierra)+nrBar('Aire','🌬️',stats.elemPct.aire)+nrBar('Agua','🌊',stats.elemPct.agua)+
+    '<div class="nr-card">'+ELEMENT_NARRATIVE[dom]+'</div></div>';
+  return html;
+}
+
+function nrSectionModality(stats){
+  const dom=Object.keys(stats.modePct).reduce((a,b)=>stats.modePct[a]>=stats.modePct[b]?a:b);
+  let html='<div class="nr-block rv"><p class="nr-eyebrow">Cómo te mueves</p><h3 class="nr-h">Las 3 Modalidades</h3>'+
+    '<p class="nr-p">Las modalidades — Cardinal, Fija y Mutable — revelan cómo inicias la acción, cómo mantienes la concentración y cómo te adaptas a los cambios de la vida.</p>'+
+    nrBar('Cardinal','🌱',stats.modePct.cardinal)+nrBar('Fijo','🗿',stats.modePct.fijo)+nrBar('Mutable','🌊',stats.modePct.mutable)+
+    '<div class="nr-card">'+MODALITY_NARRATIVE[dom]+'</div></div>';
+  return html;
+}
+
+function nrSectionNodes(nnHouse,snHouse){
+  return '<div class="nr-block rv"><p class="nr-eyebrow">Tu rumbo evolutivo</p><h3 class="nr-h">Nodos Lunares</h3>'+
+    '<p class="nr-p">El Nodo Norte es tu destino, lo que te empuja hacia experiencias nuevas, tal vez intimidantes. El Nodo Sur es tu zona de confort kármico, aquello que debes soltar y superar.</p>'+
+    '<p class="nr-p">Tu Nodo Norte está en la Casa '+nnHouse+' y tu Nodo Sur está en la Casa '+snHouse+'.</p>'+
+    '<div class="nr-card"><b>☊ Nodo Norte en Casa '+nnHouse+'</b><br>Tu camino hacia el crecimiento '+NORTH_NODE_TEXT[nnHouse-1]+'</div>'+
+    '<div class="nr-card"><b>Nodo Sur en Casa '+snHouse+'</b><br>Tu patrón kármico '+SOUTH_NODE_TEXT[snHouse-1]+'</div></div>';
+}
+
+function nrSectionAspects(positions){
+  const aspects=calcAspects(positions);
+  if(!aspects.length){
+    return '<div class="nr-block rv"><p class="nr-eyebrow">Relaciones internas</p><h3 class="nr-h">Aspectos</h3><p class="nr-p">No se detectaron aspectos mayores dentro del orbe estándar.</p></div>';
+  }
+  let rows=aspects.map(a=>{
+    const n1=PLANET_NAME_BY_KEY[a.k1]||a.k1,n2=PLANET_NAME_BY_KEY[a.k2]||a.k2;
+    const s1=PLANET_SYM_BY_KEY[a.k1]||'',s2=PLANET_SYM_BY_KEY[a.k2]||'';
+    const orbe=Math.abs(a.diff-a.asp.angle).toFixed(1);
+    return '<div class="nr-aspect-row"><span>'+s1+' '+n1+'</span><span class="nr-aspect-glyph">'+(ASPECT_SYM[a.asp.name]||'')+' '+a.asp.name+'</span><span>'+s2+' '+n2+'</span><span class="nr-aspect-orb">orbe '+orbe+'°</span></div>';
+  }).join('');
+  return '<div class="nr-block rv"><p class="nr-eyebrow">Relaciones internas</p><h3 class="nr-h">Aspectos</h3>'+
+    '<p class="nr-p">Los aspectos son las relaciones entre los planetas de tu carta: afectan quién eres, qué te pasa y cómo creces. Muestran los altibajos que hacen que tu vida sea especial.</p>'+
+    '<p class="nr-p" style="font-size:.85rem;color:var(--tm)">☌ Conjunción (0°) dinámico · △ Trígono (120°) armonía · □ Cuadratura (90°) desafiante · ☍ Oposición (180°) tensión · ⚹ Sextil (60°) oportunidad · ⚻ Quincuncio (150°) ajuste</p>'+
+    '<div class="nr-aspects-list">'+rows+'</div></div>';
+}
+
+function nrSectionStellium(stelliums){
+  let html='<div class="nr-block rv"><p class="nr-eyebrow">Dónde se concentra tu energía</p><h3 class="nr-h">Stellium</h3>'+
+    '<p class="nr-p">Cuando 3 o más planetas se agrupan en una misma casa, se forma un Stellium. Revela dónde se centra tu atención: tus puntos fuertes, cómo afrontas los retos y dónde brillas más.</p>';
+  if(!stelliums.length){
+    html+='<p class="nr-p">No se detectan agrupaciones de 3 o más planetas en una misma casa: tu energía está distribuida de forma más pareja entre las distintas áreas de tu vida.</p>';
+  }else{
+    stelliums.forEach(st=>{
+      const names=st.planets.map(k=>PLANET_SYM_BY_KEY[k]+' '+PLANET_NAME_BY_KEY[k]).join(', ');
+      html+='<div class="nr-card"><b>Stellium en Casa '+st.house+'</b><br>'+names+'<br>La Casa '+st.house+' abarca '+HOUSE_MEANINGS[st.house-1]+'.</div>';
+    });
+  }
+  html+='</div>';
+  return html;
+}
+
+function nrSectionRuler(ruler){
+  if(!ruler.rulerHouse)return '';
+  const rulerName=PLANET_NAME_BY_KEY[ruler.rulerKey]||ruler.rulerKey;
+  const naturalSign=NATURAL_SIGN_HOUSE[ruler.rulerHouse-1];
+  return '<div class="nr-block rv"><p class="nr-eyebrow">El hilo conductor</p><h3 class="nr-h">El Regente de tu Carta</h3>'+
+    '<p class="nr-p">Con tu Ascendente en '+ruler.ascSign+', el planeta que rige tu carta es '+rulerName+', ubicado en tu Casa '+ruler.rulerHouse+'.</p>'+
+    '<div class="nr-card"><b>Regente en Casa '+ruler.rulerHouse+'</b><br>Con el regente de tu carta en la Casa '+ruler.rulerHouse+', '+RULER_HOUSE_TEXT[ruler.rulerHouse-1]+'</div>'+
+    '<div class="nr-card"><b>Correspondencia natural: '+naturalSign+'</b><br>Esta casa se asocia naturalmente con '+naturalSign+', lo que añade '+SIGN_KEYWORD_TEXT[naturalSign]+'</div></div>';
+}
+
+function nrSectionHemispheres(h){
+  if(!h.total)return '';
+  const vertDom=h.north>=h.south?'north':'south';
+  const horizDom=h.east>=h.west?'east':'west';
+  return '<div class="nr-block rv"><p class="nr-eyebrow">La forma general de tu carta</p><h3 class="nr-h">Hemisferios</h3>'+
+    '<p class="nr-p">Tu carta se puede leer también en su conjunto: arriba (saliente), abajo (reservado), izquierda (independiente) y derecha (orientado a las relaciones).</p>'+
+    '<div class="nr-card">'+HEMI_TEXT[horizDom]+'</div>'+
+    '<div class="nr-card">'+HEMI_TEXT[vertDom]+'</div></div>';
+}
+
+function nrSectionClosing(sunSign,stats){
+  const dom=Object.keys(stats.elemPct).reduce((a,b)=>stats.elemPct[a]>=stats.elemPct[b]?a:b);
+  return '<div class="nr-block rv"><h3 class="nr-h">En síntesis</h3>'+
+    '<p class="nr-p">Tu carta natal está calculada en tiempo real a partir de tu fecha, hora y lugar de nacimiento exactos — no es una plantilla genérica. Con tu Sol en '+sunSign+' y una energía predominantemente de '+dom+', tienes un mapa único con mucho que ofrecer.</p>'+
+    '<p class="nr-p" style="font-size:.85rem;color:var(--tm)"><em>Esta lectura es una guía de autoconocimiento y no reemplaza el acompañamiento de un/a astrólogo/a profesional.</em></p></div>';
+}
+
+function renderNatalReading(data){
+  const{positions,houses}=data;
+  const el=$('natal-reading');if(!el)return;
+  const sunSign=nrSignName(positions.sun),moonSign=nrSignName(positions.moon),ascSign=nrSignName(positions.asc);
+  const stats=nrElementModalityStats(positions);
+  const stelliums=nrStelliums(positions);
+  const ruler=nrChartRuler(positions);
+  const nodes=nrNodeHouses(positions,houses);
+  const hemis=nrHemispheres(positions);
+  let html='<div class="nr-wrap">'+
+    '<div class="nr-intro rv"><h2 class="nr-main-title">✦ Tu Lectura de Carta Natal ✦</h2><p class="nr-p">Los planetas de tu carta astral son como personajes vibrantes que dan forma a la historia de tu vida. Su ubicación en signos y casas específicos revela tu expresión única, iluminando tus motivaciones, tu potencial y las fuerzas subyacentes que guían tu viaje.</p></div>'+
+    nrSectionBigThree(sunSign,moonSign,ascSign)+
+    nrSectionElements(stats)+
+    nrSectionModality(stats)+
+    nrSectionNodes(nodes.nnHouse,nodes.snHouse)+
+    nrSectionAspects(positions)+
+    nrSectionStellium(stelliums)+
+    nrSectionRuler(ruler)+
+    nrSectionHemispheres(hemis)+
+    nrSectionClosing(sunSign,stats)+
+    '</div>';
+  el.innerHTML=html;
+  setupReveal();
 }
 
 // ── Rueda Natal Profesional estilo Astro-Seek ──
