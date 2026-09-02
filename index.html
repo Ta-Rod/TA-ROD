@@ -5161,6 +5161,31 @@ const CIELO_NAME_FONT=['13px Georgia,serif','12px Georgia,serif','11px Georgia,s
 let cieloD3JsonPatched=false;
 let cieloD3ZoomPatched=false;
 const CIELO_CDN='https://cdn.jsdelivr.net/npm/d3-celestial@0.7.35/';
+// La Vía Láctea de d3-celestial se dibuja como varios polígonos de densidad (canvas 2D,
+// no SVG) rellenos con un color plano: por defecto se ve como una "mancha" de bordes
+// filosos. No hay forma de pasarle blur por config, así que interceptamos context.fill()
+// SOLO cuando el relleno activo es el color exclusivo de la Vía Láctea (CIELO_MW_FILL) y
+// le aplicamos un blur nativo del canvas justo para esa pasada — constelaciones, estrellas,
+// planetas y horizonte siguen tan nítidos como siempre.
+let cieloMwCanvasPatched=false;
+const CIELO_MW_FILL='#DBCBA0';
+const CIELO_MW_OPACITY='0.075';
+const CIELO_MW_BLUR=3.4;
+function cieloPatchMwBlur(){
+  if(cieloMwCanvasPatched || typeof CanvasRenderingContext2D==='undefined')return;
+  cieloMwCanvasPatched=true;
+  const nativeFill=CanvasRenderingContext2D.prototype.fill;
+  CanvasRenderingContext2D.prototype.fill=function(){
+    if(typeof Celestial!=='undefined' && this===Celestial.context && typeof this.fillStyle==='string' && this.fillStyle.toLowerCase()===CIELO_MW_FILL.toLowerCase()){
+      const prevFilter=this.filter;
+      this.filter='blur('+CIELO_MW_BLUR+'px)';
+      const r=nativeFill.apply(this,arguments);
+      this.filter=prevFilter||'none';
+      return r;
+    }
+    return nativeFill.apply(this,arguments);
+  };
+}
 function $c(id){return document.getElementById(id)}
 // ═══════════════════════════════════════
 // Datos de constelaciones capturados de los JSON que d3-celestial ya descarga
@@ -5485,7 +5510,7 @@ function cieloBuildConfig(){
       nameStyle:{fill:CIELO_NAME_FILL,align:'center',baseline:'middle',opacity:CIELO_NAME_OPACITY,
         font:CIELO_NAME_FONT},
       lines:cieloShow.const,lineStyle:{stroke:CIELO_LINE_STROKE,width:CIELO_LINE_WIDTH,opacity:CIELO_LINE_OPACITY},bounds:false},
-    mw:{show:cieloShow.mw,style:{fill:'#C9A84C',opacity:'0.045'}},
+    mw:{show:cieloShow.mw,style:{fill:CIELO_MW_FILL,opacity:CIELO_MW_OPACITY}},
     lines:{graticule:{show:false},equatorial:{show:false},
       ecliptic:{show:cieloShow.ecliptic,stroke:'#7A6230',width:1,opacity:.4},
       galactic:{show:false},supergalactic:{show:false}},
@@ -5564,6 +5589,7 @@ function cieloInit(){
     };
     cieloD3JsonPatched=true;
   }
+  cieloPatchMwBlur();
   cieloSizeMap();
   cieloEnsureConstBounds();
   try{ Celestial.display(cieloBuildConfig()); }
