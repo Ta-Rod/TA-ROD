@@ -94,7 +94,7 @@ section{position:relative;z-index:1;padding:6rem 4rem}
 
 /* CARTA NATAL */
 #carta-natal{background:linear-gradient(180deg,var(--abyss) 0%,var(--dp) 50%,var(--abyss) 100%);max-width:920px;margin:0 auto}
-.carta-form{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.3rem;margin-bottom:1.2rem}
+.carta-form{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:1.3rem;margin-bottom:1.2rem}
 .fg{display:flex;flex-direction:column;gap:.4rem}
 .fg label{font-size:.58rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gd)}
 .fg input{background:rgba(201,168,76,.03);border:1px solid var(--br);padding:.85rem 1rem;color:var(--tp);font-family:'Inter',sans-serif;font-size:.82rem;outline:none;transition:border-color .3s;-webkit-appearance:none;color-scheme:dark}
@@ -989,6 +989,7 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
 <div class="tab-panel active" id="carta-natal" data-module="modulo-astrologia" data-tab="carta-natal">
   <div style="max-width:920px;margin:0 auto">
     <div class="carta-form rv">
+      <div class="fg"><label>Tu Nombre (opcional)</label><input type="text" id="b-name" placeholder="Para personalizar tu carta"></div>
       <div class="fg"><label>Fecha de Nacimiento</label><input type="date" id="b-date"></div>
       <div class="fg"><label>Hora Exacta</label><input type="time" id="b-time"></div>
       <div class="fg"><label>Ciudad de Nacimiento</label><input type="text" id="b-city" placeholder="Ej: San José, Costa Rica"></div>
@@ -1010,6 +1011,7 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
       <div class="carta-wheel-controls">
         <button class="cwc-btn" id="btn-toggle-lines" onclick="toggleAspectLines()">👁 Ocultar líneas de aspecto</button>
         <button class="cwc-btn" id="btn-download-docx" onclick="downloadCartaDocx()">⬇ Descargar Carta (.docx)</button>
+        <button class="cwc-btn" id="btn-download-pptx" onclick="downloadCartaPptx()">⬇ Descargar Presentación (.pptx)</button>
       </div>
       <!-- rueda + posiciones -->
       <div class="carta-wheel-wrap">
@@ -2600,7 +2602,7 @@ async function geocodeCity(cityStr){
 }
 
 async function calcCarta(){
-  const dateVal=$('b-date').value,timeVal=$('b-time').value,cityVal=$('b-city').value.trim();
+  const nameVal=$('b-name').value.trim(),dateVal=$('b-date').value,timeVal=$('b-time').value,cityVal=$('b-city').value.trim();
   if(!dateVal||!cityVal){showCartaError('Por favor completa la fecha de nacimiento y la ciudad.');return}
   $('carta-result').classList.remove('show');$('carta-error').classList.remove('show');$('carta-loading').classList.add('show');
   try{
@@ -2632,7 +2634,7 @@ async function calcCarta(){
       positions[pKey+'_house']=h;
     }
     const months=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-    cartaData={positions,houses,geo,year,month,day,hour,minute,timeVal,cityVal,months};
+    cartaData={positions,houses,geo,year,month,day,hour,minute,timeVal,cityVal,months,nameVal};
     renderCarta(cartaData);
   }catch(e){showCartaError('Error al calcular: '+e.message+'. Verifica los datos e intenta de nuevo.');console.error(e);}
   finally{$('carta-loading').classList.remove('show')}
@@ -2868,9 +2870,17 @@ function openCasaModal(houseNum,signName,deg,min){
 function closeCasaModal(){$('casa-modal-ov').classList.remove('on');document.body.style.overflow=''}
 
 // ── Rueda Natal Profesional estilo Astro-Seek ──
-function drawCartaWheelPro(positions,houses){
-  const canvas=$('carta-wheel'),ctx=canvas.getContext('2d');
+function drawCartaWheelPro(positions,houses,targetCanvas,scale){
+  const canvas=targetCanvas||$('carta-wheel');
+  scale=scale||1;
   const W=480,H=480,cx=240,cy=240;
+  // Con scale>1 (usado para exportar la rueda en alta resolución a un canvas
+  // fuera de pantalla) se agranda el lienzo físico y se escala el contexto:
+  // todo el resto de la función sigue dibujando en el mismo espacio lógico
+  // 480×480 de siempre, sin tocar ningún radio ni coordenada.
+  if(scale!==1){canvas.width=W*scale;canvas.height=H*scale}
+  const ctx=canvas.getContext('2d');
+  ctx.setTransform(scale,0,0,scale,0,0);
   ctx.clearRect(0,0,W,H);
 
   const ascDeg=positions.asc!==undefined?positions.asc:0;
@@ -2994,6 +3004,92 @@ function drawCartaWheelPro(positions,houses){
   ctx.font='bold 18px serif';ctx.fillStyle='rgba(230,210,160,.65)';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('✦',cx,cy);
 }
 
+// ── Helpers de exportación HD (compartidos por .docx y .pptx) ──
+// Redibuja la rueda natal en un canvas nuevo, fuera de pantalla, a varias
+// veces la resolución de la que se ve en el navegador (scale=4 → 1920×1920),
+// y la devuelve como PNG en base64. La rueda es 100% vectorial (arcos,
+// líneas y texto de canvas, sin imágenes rasterizadas de por medio), así
+// que amplía sin perder nitidez.
+function cartaWheelPNG(positions,houses,scale){
+  const off=document.createElement('canvas');
+  drawCartaWheelPro(positions,houses,off,scale||4);
+  return off.toDataURL('image/png');
+}
+// Dibuja texto con las tipografías reales del sitio (Playfair Display /
+// Cormorant Garamond, ya cargadas por la página vía Google Fonts) sobre un
+// canvas transparente en alta resolución, para poder insertarlo como imagen
+// en el .pptx — PowerPoint no puede usar esas fuentes si no están
+// instaladas en la computadora de quien lo abre, así que en vez de confiar
+// en texto nativo para los títulos, los "quemamos" ya renderizados.
+async function renderStyledTextPNG(text,{font='Playfair Display',weight=700,italic=false,size=64,color='#E8D5A3',gradient=null,letterSpacing=0,pad=24,scale=3}={}){
+  const fontStr=(italic?'italic ':'')+weight+' '+size+'px "'+font+'", serif';
+  if(document.fonts&&document.fonts.load){
+    try{await document.fonts.load(fontStr);await document.fonts.ready;}catch(e){}
+  }
+  const meas=document.createElement('canvas').getContext('2d');
+  meas.font=fontStr;
+  let textW=0;for(const ch of text){textW+=meas.measureText(ch).width+letterSpacing}
+  const W=Math.ceil(textW+pad*2),H=Math.ceil(size*1.6+pad);
+  const cv=document.createElement('canvas');cv.width=W*scale;cv.height=H*scale;
+  const ctx=cv.getContext('2d');ctx.setTransform(scale,0,0,scale,0,0);
+  ctx.font=fontStr;
+  ctx.textBaseline='middle';
+  let fill=color;
+  if(gradient){
+    const g=ctx.createLinearGradient(0,pad/2,0,H-pad/2);
+    gradient.forEach(([off,c])=>g.addColorStop(off,c));
+    fill=g;
+  }
+  ctx.fillStyle=fill;
+  ctx.shadowColor='rgba(0,0,0,.55)';ctx.shadowBlur=6;ctx.shadowOffsetY=2;
+  let x=pad;const y=H/2;
+  for(const ch of text){ctx.fillText(ch,x,y);x+=meas.measureText(ch).width+letterSpacing}
+  return {url:cv.toDataURL('image/png'),w:W,h:H};
+}
+// Convierte un dataURL (png) a ArrayBuffer, formato que pide ImageRun de docx.
+async function dataURLToArrayBuffer(dataUrl){
+  const resp=await fetch(dataUrl);
+  return await resp.arrayBuffer();
+}
+// Gráfico de dona de los 4 elementos (fuego/tierra/aire/agua), en alta
+// resolución, para el .pptx — el mismo cálculo que ya usa el .docx en
+// forma de texto, aquí como imagen.
+function elementosDonutPNG(elemCount,scale){
+  scale=scale||3;
+  const W=520,H=420,cx=180,cy=210,Ro=150,Ri=92;
+  const cv=document.createElement('canvas');cv.width=W*scale;cv.height=H*scale;
+  const ctx=cv.getContext('2d');ctx.setTransform(scale,0,0,scale,0,0);
+  const data=[
+    {k:'Fuego',v:elemCount.fuego,col:'#D9622B'},
+    {k:'Tierra',v:elemCount.tierra,col:'#6E8F4E'},
+    {k:'Aire',v:elemCount.aire,col:'#4F8FBF'},
+    {k:'Agua',v:elemCount.agua,col:'#8A5FC2'}
+  ];
+  const total=data.reduce((s,d)=>s+d.v,0)||1;
+  let ang=-Math.PI/2;
+  data.forEach(d=>{
+    const sweep=(d.v/total)*Math.PI*2;
+    if(d.v>0){
+      ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,Ro,ang,ang+sweep);ctx.closePath();
+      ctx.fillStyle=d.col;ctx.fill();
+    }
+    ang+=sweep;
+  });
+  ctx.beginPath();ctx.arc(cx,cy,Ri,0,6.29);ctx.fillStyle='#07071A';ctx.fill();
+  ctx.font='600 15px Georgia, serif';ctx.fillStyle='#9A8A6A';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.fillText('ELEMENTOS',cx,cy-8);
+  ctx.font='italic 12px Georgia, serif';ctx.fillText('predominantes',cx,cy+12);
+  // leyenda
+  let ly=cy-Ro+6;
+  data.forEach(d=>{
+    ctx.beginPath();ctx.arc(W-150,ly,6,0,6.29);ctx.fillStyle=d.col;ctx.fill();
+    ctx.font='600 15px Georgia, serif';ctx.fillStyle='#E8D5A3';ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText(d.k+' — '+d.v,W-136,ly);
+    ly+=32;
+  });
+  return cv.toDataURL('image/png');
+}
+
 function toggleAspectLines(){
   cartaShowLines=!cartaShowLines;
   const btn=$('btn-toggle-lines');
@@ -3003,7 +3099,7 @@ function toggleAspectLines(){
 }
 
 function showCartaError(msg){$('carta-loading').classList.remove('show');const e=$('carta-error');e.textContent=msg;e.classList.add('show')}
-function clearCarta(){$('b-date').value='';$('b-time').value='';$('b-city').value='';$('carta-error').classList.remove('show')}
+function clearCarta(){$('b-name').value='';$('b-date').value='';$('b-time').value='';$('b-city').value='';$('carta-error').classList.remove('show')}
 function resetCarta(){clearCarta();$('carta-result').classList.remove('show');$('carta-loading').classList.remove('show');$('planet-tip').querySelector('p').textContent='Selecciona un planeta para conocer su influencia chamánica...';cartaData=null;$('carta-natal').scrollIntoView({behavior:'smooth',block:'start'})}
 
 // ── Descarga carta natal como DOCX real, generado en el navegador ──
@@ -3037,8 +3133,8 @@ async function downloadCartaDocx(){
   }finally{btn.textContent=orig;btn.disabled=false}
 }
 async function buildCartaWordDoc(docxLib,data){
-  const{Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,HeadingLevel,AlignmentType,BorderStyle,WidthType,ShadingType}=docxLib;
-  const{positions,houses,geo,year,month,day,hour,minute}=data;
+  const{Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,HeadingLevel,AlignmentType,BorderStyle,WidthType,ShadingType,ImageRun,Header,Footer,PageNumber}=docxLib;
+  const{positions,houses,geo,year,month,day,hour,minute,nameVal}=data;
   const monthNames=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   const planetsArr=[];
   PLANET_ORDER.forEach(p=>{
@@ -3052,6 +3148,10 @@ async function buildCartaWordDoc(docxLib,data){
   ['sun','moon','mercury','venus','mars','jupiter','saturn'].forEach(k=>{const lon=positions[k];if(lon===undefined)return;const sName=SIGN_NAMES[degToSignPos(lon).signIdx];const elem=SIGN_ELEM[sName];if(elem)elemCount[elem]++});
   const interps=[];
   PLANET_ORDER.slice(0,7).forEach(p=>{const lon=positions[p.key];if(lon===undefined)return;const pos=degToSignPos(lon);interps.push({titulo:p.sym+' '+p.name+' en '+SIGN_NAMES[pos.signIdx],texto:getPlanetTipFull(p.sym,SIGN_NAMES[pos.signIdx])})});
+  const wheelImgBuf=await dataURLToArrayBuffer(cartaWheelPNG(positions,houses,4));
+  const elemMax=Math.max(1,...Object.values(elemCount));
+  function elemBar(v){const filled=Math.round((v/elemMax)*12);return '█'.repeat(filled)+'░'.repeat(12-filled)}
+  const elemLabels={fuego:'🔥 Fuego',tierra:'🌿 Tierra',aire:'🌬 Aire',agua:'🌊 Agua'};
 
   const GOLD='9C7A2E';
   function h(text){return new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:300,after:150},children:[new TextRun({text,bold:true,color:GOLD,font:'Georgia'})]})}
@@ -3073,23 +3173,37 @@ async function buildCartaWordDoc(docxLib,data){
   const doc=new Document({
     sections:[{
       properties:{},
+      footers:{
+        default:new Footer({children:[
+          new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:120},border:{top:{color:'CCCCCC',space:8,style:BorderStyle.SINGLE,size:6}},children:[
+            new TextRun({text:'✦ TA-ROD · Tarot · Astrología · Chamanismo · +(506) 8821-5669 · ',italics:true,color:'888888',size:16,font:'Georgia'}),
+            new TextRun({children:[PageNumber.CURRENT],italics:true,color:'888888',size:16,font:'Georgia'})
+          ]})
+        ]})
+      },
       children:[
         new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:80},children:[new TextRun({text:'TA · ROD',bold:true,size:44,color:GOLD,font:'Georgia'})]}),
-        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:300},children:[new TextRun({text:'Carta Natal',italics:true,size:28,color:'555555',font:'Georgia'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:nameVal?100:300},children:[new TextRun({text:'Carta Natal',italics:true,size:28,color:'555555',font:'Georgia'})]}),
+        ...(nameVal?[new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:300},children:[new TextRun({text:'Preparada para '+nameVal,italics:true,size:22,color:GOLD,font:'Georgia'})]})]:[]),
         new Paragraph({spacing:{after:200},children:[new TextRun({text:'Fecha de nacimiento: ',bold:true,font:'Georgia'}),new TextRun({text:day+' de '+monthNames[month-1]+' de '+year+', '+String(hour||12).padStart(2,'0')+':'+String(minute||0).padStart(2,'0')+' hrs',font:'Georgia'})]}),
         new Paragraph({spacing:{after:300},children:[new TextRun({text:'Lugar de nacimiento: ',bold:true,font:'Georgia'}),new TextRun({text:geo.name,font:'Georgia'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:300},children:[new ImageRun({type:'png',data:wheelImgBuf,transformation:{width:380,height:380}})]}),
         h('Posiciones Planetarias'),
         tableFromRows(['Planeta','Signo','Grado','Casa'],planetsArr.map(p=>[p.sym+' '+p.name,p.sign,p.deg,p.house||'—'])),
         h('Casas (Sistema Placidus)'),
         tableFromRows(['Casa','Signo','Grado'],housesArr.map(hh=>[hh.num,hh.sign,hh.deg])),
         h('Elementos'),
-        new Paragraph({spacing:{after:300},children:[new TextRun({text:Object.entries(elemCount).map(([k,v])=>k.charAt(0).toUpperCase()+k.slice(1)+': '+v).join('   ·   '),font:'Georgia'})]}),
+        ...Object.entries(elemCount).map(([k,v])=>new Paragraph({spacing:{after:60},children:[
+          new TextRun({text:elemLabels[k]+'  ',font:'Georgia',size:20}),
+          new TextRun({text:elemBar(v)+'  ',font:'Consolas',size:20,color:GOLD}),
+          new TextRun({text:String(v),font:'Georgia',size:20,bold:true})
+        ]})),
+        new Paragraph({spacing:{after:300}}),
         h('Interpretación Chamánica'),
         ...interps.flatMap(i=>[
           new Paragraph({spacing:{before:150,after:60},children:[new TextRun({text:i.titulo,bold:true,color:GOLD,font:'Georgia'})]}),
           new Paragraph({spacing:{after:180},children:[new TextRun({text:i.texto,font:'Georgia'})]})
-        ]),
-        new Paragraph({spacing:{before:400},alignment:AlignmentType.CENTER,border:{top:{color:'CCCCCC',space:8,style:BorderStyle.SINGLE,size:6}},children:[new TextRun({text:'✦ TA-ROD · Tarot · Astrología · Chamanismo · +(506) 8821-5669',italics:true,color:'888888',size:18,font:'Georgia'})]})
+        ])
       ]
     }]
   });
@@ -3097,6 +3211,183 @@ async function buildCartaWordDoc(docxLib,data){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download='TA-ROD_Carta_Natal.docx';document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+
+// ── Descarga carta natal como PPTX real (presentación) ──
+// Igual que el .docx: se genera 100% en el navegador de quien visita el
+// sitio, con la librería PptxGenJS (MIT) cargada bajo demanda desde CDN.
+// Los títulos grandes se "queman" como imagen (renderStyledTextPNG) con las
+// tipografías reales del sitio (Playfair Display / Cormorant Garamond), ya
+// que PowerPoint no puede mostrarlas si no están instaladas en la
+// computadora de quien lo abre — el texto de cuerpo sí queda editable,
+// con una serif clásica (Georgia) como equivalente seguro.
+let PPTX_LIB_PROMISE=null;
+function loadPptxLib(){
+  if(window.PptxGenJS)return Promise.resolve(window.PptxGenJS);
+  if(PPTX_LIB_PROMISE)return PPTX_LIB_PROMISE;
+  PPTX_LIB_PROMISE=new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src='https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';
+    s.onload=()=>resolve(window.PptxGenJS);
+    s.onerror=()=>reject(new Error('No se pudo cargar la librería de generación de presentaciones.'));
+    document.head.appendChild(s);
+  });
+  return PPTX_LIB_PROMISE;
+}
+async function downloadCartaPptx(){
+  if(!cartaData){alert('Primero genera tu carta natal.');return}
+  const btn=$('btn-download-pptx');
+  const orig=btn.textContent;btn.textContent='⏳ Generando presentación...';btn.disabled=true;
+  try{
+    const PptxGenJS=await loadPptxLib();
+    await buildCartaPptx(PptxGenJS,cartaData);
+  }catch(e){
+    console.error('No se pudo generar el .pptx:',e);
+    alert('No se pudo generar la presentación. Verifica tu conexión e intenta de nuevo.');
+  }finally{btn.textContent=orig;btn.disabled=false}
+}
+async function buildCartaPptx(PptxGenJS,data){
+  const{positions,houses,geo,year,month,day,hour,minute,nameVal}=data;
+  const monthNames=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const planetsArr=[];
+  PLANET_ORDER.forEach(p=>{
+    const lon=positions[p.key];if(lon===undefined)return;
+    const pos=degToSignPos(lon),house=positions[p.key+'_house']||'';
+    planetsArr.push({sym:p.sym,name:p.name,sign:SIGN_NAMES[pos.signIdx],deg:pos.deg+'°'+String(pos.min).padStart(2,'0')+'′',house});
+  });
+  const housesArr=[];
+  for(let i=1;i<=12;i++){if(houses[i]===undefined)continue;const pos=degToSignPos(houses[i]);housesArr.push({num:'Casa '+i,sign:SIGN_NAMES[pos.signIdx],deg:pos.deg+'°'})}
+  const elemCount={fuego:0,tierra:0,aire:0,agua:0};
+  ['sun','moon','mercury','venus','mars','jupiter','saturn'].forEach(k=>{const lon=positions[k];if(lon===undefined)return;const sName=SIGN_NAMES[degToSignPos(lon).signIdx];const elem=SIGN_ELEM[sName];if(elem)elemCount[elem]++});
+  const bigThree=['sun','moon','asc'].map(k=>{
+    const lon=positions[k];if(lon===undefined)return null;
+    const pos=degToSignPos(lon);
+    return {label:k==='sun'?'☉ Sol':k==='moon'?'☽ Luna':'↑ Ascendente',sign:SIGN_NAMES[pos.signIdx],deg:pos.deg+'°'+String(pos.min).padStart(2,'0')+'′'};
+  }).filter(Boolean);
+  const spotlightKeys=['sun','moon','asc'];
+  const spotlights=spotlightKeys.map(k=>{
+    const lon=positions[k];if(lon===undefined)return null;
+    const pos=degToSignPos(lon);
+    const sym=k==='sun'?'☉':k==='moon'?'☽':'⬆';
+    const name=k==='sun'?'Sol':k==='moon'?'Luna':'Ascendente';
+    return {sym,name,sign:SIGN_NAMES[pos.signIdx],texto:getPlanetTipFull(sym,SIGN_NAMES[pos.signIdx])};
+  }).filter(Boolean);
+
+  // ── colores e imágenes compartidas ──
+  const BG='07071A',DP='120A2E',GOLD='C9A84C',GL='E8D5A3',GD='7A6230',TS='9A8A6A';
+  const wheelPng=cartaWheelPNG(positions,houses,4);
+  const donutPng=elementosDonutPNG(elemCount,3);
+  const wordmark=await renderStyledTextPNG('TA · ROD',{font:'Playfair Display',weight:700,size:120,gradient:[[0,'#FBEECB'],[.42,'#CFAE5C'],[1,'#8A6A2E']],scale:2.5,letterSpacing:2});
+  const sub1=await renderStyledTextPNG('Carta Natal',{font:'Cormorant Garamond',weight:400,italic:true,size:46,color:'#E8D5A3',scale:2.5});
+  const wheelTitle=await renderStyledTextPNG('Tu Mapa del Cielo',{font:'Playfair Display',weight:700,size:40,color:'#E8D5A3',scale:2.5});
+  const posTitle=await renderStyledTextPNG('Posiciones Planetarias',{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5});
+  const houseTitle=await renderStyledTextPNG('Las 12 Casas',{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5});
+  const elemTitle=await renderStyledTextPNG('Balance Elemental',{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5});
+  const closeTitle=await renderStyledTextPNG('Gracias por confiar en las estrellas',{font:'Playfair Display',weight:700,italic:true,size:30,color:'#E8D5A3',scale:2.5});
+  const spotTitles=await Promise.all(spotlights.map(s=>renderStyledTextPNG(s.sym+' '+s.name+' en '+s.sign,{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5})));
+
+  const pptx=new PptxGenJS();
+  pptx.layout='LAYOUT_WIDE'; // 13.33 x 7.5 in
+  const PW=13.33,PH=7.5;
+
+  function bgSlide(){
+    const s=pptx.addSlide();
+    s.background={color:BG};
+    return s;
+  }
+  function footerBrand(s,pageNote){
+    s.addShape(pptx.ShapeType.line,{x:.7,y:PH-.55,w:PW-1.4,h:0,line:{color:GD,width:.75,transparency:40}});
+    s.addText('TA · ROD  ·  Tarot · Astrología · Chamanismo  ·  +(506) 8821-5669',{
+      x:.7,y:PH-.48,w:PW-1.4,h:.3,fontFace:'Georgia',fontSize:9,color:TS,align:'center',italic:true
+    });
+  }
+
+  // ── 1. Portada ──
+  {
+    const s=bgSlide();
+    s.addShape(pptx.ShapeType.ellipse,{x:PW/2-4.2,y:-3.6,w:8.4,h:8.4,fill:{color:GD,transparency:88},line:{type:'none'}});
+    const w=3.4,h=w*(wordmark.h/wordmark.w);
+    s.addImage({data:wordmark.url,x:(PW-w)/2,y:2.15,w,h});
+    const w2=1.9,h2=w2*(sub1.h/sub1.w);
+    s.addImage({data:sub1.url,x:(PW-w2)/2,y:2.15+h+.15,w:w2,h:h2});
+    let y=2.15+h+.15+h2+.55;
+    if(nameVal){
+      s.addText('Preparada para '+nameVal,{x:0,y,w:PW,h:.45,fontFace:'Georgia',fontSize:20,italic:true,color:GOLD,align:'center'});
+      y+=.6;
+    }
+    const fecha=day+' de '+monthNames[month-1]+' de '+year+'  ·  '+String(hour||12).padStart(2,'0')+':'+String(minute||0).padStart(2,'0')+' hrs  ·  '+geo.name;
+    s.addText(fecha,{x:.8,y,w:PW-1.6,h:.4,fontFace:'Georgia',fontSize:13,color:TS,align:'center',charSpacing:1});
+    s.addText('✦',{x:0,y:PH-1.15,w:PW,h:.4,fontFace:'Georgia',fontSize:16,color:GOLD,align:'center'});
+  }
+
+  // ── 2. Rueda natal ──
+  {
+    const s=bgSlide();
+    const tw=3.1,th=tw*(wheelTitle.h/wheelTitle.w);
+    s.addImage({data:wheelTitle.url,x:(PW-tw)/2,y:.55,w:tw,h:th});
+    const size=4.9;
+    s.addImage({data:wheelPng,x:(PW-size)/2,y:1.55,w:size,h:size});
+    const bt=bigThree.map(b=>b.label+'  '+b.sign+' '+b.deg).join('     ·     ');
+    s.addText(bt,{x:.6,y:6.75,w:PW-1.2,h:.4,fontFace:'Georgia',fontSize:12,color:GL,align:'center',italic:true});
+  }
+
+  // ── 3. Posiciones planetarias (tabla) ──
+  {
+    const s=bgSlide();
+    const tw=4.4,th=tw*(posTitle.h/posTitle.w);
+    s.addImage({data:posTitle.url,x:.75,y:.5,w:tw,h:th});
+    const header=['Planeta','Signo','Grado','Casa'].map(t=>({text:t,options:{bold:true,color:BG,fill:{color:GOLD},fontFace:'Georgia',fontSize:12,align:'center'}}));
+    const rows=[header,...planetsArr.map((p,i)=>[p.sym+'  '+p.name,p.sign,p.deg,String(p.house||'—')].map(t=>({text:t,options:{color:GL,fill:{color:i%2?DP:BG},fontFace:'Georgia',fontSize:11.5,align:'center'}})))];
+    s.addTable(rows,{x:.75,y:.5+th+.35,w:PW-1.5,h:5.3,colW:[3.1,(PW-1.5-3.1)/3,(PW-1.5-3.1)/3,(PW-1.5-3.1)/3],border:{type:'solid',color:GD,pt:.5},autoPage:false});
+    footerBrand(s);
+  }
+
+  // ── 4. Casas ──
+  {
+    const s=bgSlide();
+    const tw=3.2,th=tw*(houseTitle.h/houseTitle.w);
+    s.addImage({data:houseTitle.url,x:.75,y:.5,w:tw,h:th});
+    const header=['Casa','Signo','Grado'].map(t=>({text:t,options:{bold:true,color:BG,fill:{color:GOLD},fontFace:'Georgia',fontSize:12,align:'center'}}));
+    const rows=[header,...housesArr.map((hh,i)=>[hh.num,hh.sign,hh.deg].map(t=>({text:t,options:{color:GL,fill:{color:i%2?DP:BG},fontFace:'Georgia',fontSize:11.5,align:'center'}})))];
+    s.addTable(rows,{x:.75,y:.5+th+.35,w:PW-1.5,h:5.3,colW:[(PW-1.5)/3,(PW-1.5)/3,(PW-1.5)/3],border:{type:'solid',color:GD,pt:.5},autoPage:false});
+    footerBrand(s);
+  }
+
+  // ── 5. Elementos ──
+  {
+    const s=bgSlide();
+    const tw=3.6,th=tw*(elemTitle.h/elemTitle.w);
+    s.addImage({data:elemTitle.url,x:(PW-tw)/2,y:.55,w:tw,h:th});
+    const dw=4.6,dh=dw*(420/520);
+    s.addImage({data:donutPng,x:(PW-dw)/2,y:1.5,w:dw,h:dh});
+    footerBrand(s);
+  }
+
+  // ── 6-8. Interpretación (Sol, Luna, Ascendente) ──
+  spotlights.forEach((sp,i)=>{
+    const s=bgSlide();
+    s.addShape(pptx.ShapeType.ellipse,{x:-2.2,y:PH/2-2.6,w:5.2,h:5.2,fill:{color:GD,transparency:90},line:{type:'none'}});
+    s.addText(sp.sym,{x:.6,y:.5,w:2.2,h:2.2,fontFace:'Georgia',fontSize:96,color:GOLD,align:'center',valign:'middle'});
+    const title=spotTitles[i];
+    const tw=6.4,th=tw*(title.h/title.w);
+    s.addImage({data:title.url,x:3,y:.85,w:tw,h:th});
+    s.addText(sp.texto,{x:3,y:.85+th+.3,w:PW-3.6,h:5,fontFace:'Georgia',fontSize:15,color:GL,align:'left',valign:'top',lineSpacingMultiple:1.35});
+    footerBrand(s);
+  });
+
+  // ── 9. Cierre ──
+  {
+    const s=bgSlide();
+    const w=2.3,h=w*(wordmark.h/wordmark.w);
+    s.addImage({data:wordmark.url,x:(PW-w)/2,y:2.3,w,h});
+    const ctw=6.5,cth=ctw*(closeTitle.h/closeTitle.w);
+    s.addImage({data:closeTitle.url,x:(PW-ctw)/2,y:2.3+h+.4,w:ctw,h:cth});
+    s.addText('Tarot · Astrología · Chamanismo\nSan José, Costa Rica  ·  +(506) 8821-5669  ·  @tatitarotcr',{
+      x:0,y:2.3+h+.4+cth+.35,w:PW,h:.9,fontFace:'Georgia',fontSize:13,color:TS,align:'center',italic:true,lineSpacingMultiple:1.4
+    });
+  }
+
+  await pptx.writeFile({fileName:'TA-ROD_Carta_Natal.pptx'});
 }
 
 async function downloadSectionDocx(sectionId){
