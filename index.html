@@ -926,6 +926,10 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
       <p class="tr-hint">Hacé clic en cada carta de tu tirada para revelarla, en el orden que prefieras</p>
       <div class="tr-cards" id="tr-cards"></div>
       <div class="tr-interp" id="tr-interp"></div>
+      <div class="carta-wheel-controls" style="margin:1rem 0">
+        <button class="cwc-btn" id="btn-download-tr-docx" onclick="downloadTiradaDocx()">⬇ Descargar Tirada (.docx)</button>
+        <button class="cwc-btn" id="btn-download-tr-pptx" onclick="downloadTiradaPptx()">⬇ Descargar Presentación (.pptx)</button>
+      </div>
       <button class="new-btn" onclick="resetTirada()">✦ Nueva Tirada ✦</button>
     </div>
   </div></div>
@@ -3837,6 +3841,171 @@ async function buildNumerologiaPptx(PptxGenJS,nd){
   }
 
   await pptx.writeFile({fileName:'TA-ROD_Numerologia.pptx'});
+}
+
+// ── Descarga de una Tirada de Tarot como .docx / .pptx ──
+// Mismo patrón que Carta Natal y Numerología. Las cartas viven en un CDN
+// externo (cardImgUrl), así que primero se traen como base64 en el propio
+// navegador de quien las pidió — si una imagen puntual falla (sin
+// conexión a ese CDN en ese instante), la tirada igual se genera, solo
+// que esa carta queda sin miniatura.
+async function urlToDataURL(url){
+  try{
+    const resp=await fetch(url);
+    if(!resp.ok)return null;
+    const blob=await resp.blob();
+    return await new Promise((resolve,reject)=>{
+      const fr=new FileReader();
+      fr.onload=()=>resolve(fr.result);
+      fr.onerror=()=>reject(new Error('No se pudo leer la imagen'));
+      fr.readAsDataURL(blob);
+    });
+  }catch(e){return null}
+}
+function trBuildData(){
+  const t=TIRADAS[tiradaActiva];
+  const cards=selCards.map((c,i)=>{
+    const mj=ARCANOS_DATA.find(a=>a.n===c.n);
+    const interp=mj?mj.tirada:(PALO_INTERP[c.p]||'');
+    const suitLabel=c.t==='mayor'?'Arcano Mayor':(c.p?c.p.charAt(0).toUpperCase()+c.p.slice(1):'');
+    return{pos:t.pos[i],name:c.n,keyword:c.k,suitLabel,interp,imgUrl:cardImgUrl(c.id)};
+  });
+  return{spreadName:t.n,spreadDesc:t.desc,cards};
+}
+async function downloadTiradaDocx(){
+  const t=TIRADAS[tiradaActiva];
+  if(selCards.length!==t.c){alert('Primero completá y revelá tu tirada.');return}
+  const btn=$('btn-download-tr-docx');
+  const orig=btn.textContent;btn.textContent='⏳ Generando documento...';btn.disabled=true;
+  try{
+    const docxLib=await loadDocxLib();
+    await buildTiradaWordDoc(docxLib,trBuildData());
+  }catch(e){
+    console.error('No se pudo generar el .docx de la tirada:',e);
+    alert('No se pudo generar el documento. Verifica tu conexión e intenta de nuevo.');
+  }finally{btn.textContent=orig;btn.disabled=false}
+}
+async function buildTiradaWordDoc(docxLib,td){
+  const{Document,Packer,Paragraph,TextRun,HeadingLevel,AlignmentType,BorderStyle,ImageRun,Footer,PageNumber}=docxLib;
+  const GOLD='9C7A2E';
+  function h(text){return new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:300,after:150},children:[new TextRun({text,bold:true,color:GOLD,font:'Georgia'})]})}
+  const wordmarkImg=await renderStyledTextPNG('TA · ROD',{font:'Playfair Display',weight:700,size:80,gradient:[[0,'#B8985A'],[.42,'#8A6A2E'],[1,'#5A4318']],scale:3,letterSpacing:1});
+  const wordmarkBuf=await dataURLToArrayBuffer(wordmarkImg.url);
+  const subtitleImg=await renderStyledTextPNG(td.spreadName,{font:'Cormorant Garamond',weight:400,italic:true,size:30,color:'#5A4318',scale:3});
+  const subtitleBuf=await dataURLToArrayBuffer(subtitleImg.url);
+  const cardImgs=await Promise.all(td.cards.map(c=>urlToDataURL(c.imgUrl)));
+  const fechaTxt=new Date().toLocaleDateString('es-CR',{day:'numeric',month:'long',year:'numeric'});
+  const doc=new Document({
+    sections:[{
+      properties:{},
+      footers:{
+        default:new Footer({children:[
+          new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:120},border:{top:{color:'CCCCCC',space:8,style:BorderStyle.SINGLE,size:6}},children:[
+            new TextRun({text:'✦ TA-ROD · Tarot · Astrología · Chamanismo · +(506) 8821-5669 · ',italics:true,color:'888888',size:16,font:'Georgia'}),
+            new TextRun({children:[PageNumber.CURRENT],italics:true,color:'888888',size:16,font:'Georgia'})
+          ]})
+        ]})
+      },
+      children:[
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:60},children:[new ImageRun({type:'png',data:wordmarkBuf,transformation:{width:Math.round(70*wordmarkImg.w/wordmarkImg.h),height:70}})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:100},children:[new ImageRun({type:'png',data:subtitleBuf,transformation:{width:Math.round(38*subtitleImg.w/subtitleImg.h),height:38}})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:120},children:[new TextRun({text:td.spreadDesc,italics:true,size:22,color:'666666',font:'Georgia'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:300},children:[new TextRun({text:fechaTxt,size:18,color:'999999',font:'Georgia'})]}),
+        ...td.cards.flatMap((c,i)=>{
+          const imgBuf=cardImgs[i];
+          return[
+            h((i+1)+'. '+c.pos),
+            ...(imgBuf?[new Paragraph({spacing:{after:120},children:[new ImageRun({type:'jpg',data:imgBuf,transformation:{width:130,height:225}})]})]:[]),
+            new Paragraph({spacing:{after:60},children:[new TextRun({text:c.name+'  —  '+c.suitLabel,bold:true,font:'Georgia',size:22})]}),
+            new Paragraph({spacing:{after:60},children:[new TextRun({text:c.keyword,italics:true,font:'Georgia',size:20,color:GOLD})]}),
+            new Paragraph({spacing:{after:300},children:[new TextRun({text:c.interp,font:'Georgia'})]})
+          ];
+        }),
+        new Paragraph({children:[new TextRun({text:'Esta lectura es una guía de reflexión y no reemplaza el acompañamiento de un/a tarotista profesional.',italics:true,size:18,color:'888888',font:'Georgia'})]})
+      ]
+    }]
+  });
+  const blob=await Packer.toBlob(doc);
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='TA-ROD_Tirada_'+td.spreadName.replace(/[^a-zA-Z0-9]+/g,'_')+'.docx';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+async function downloadTiradaPptx(){
+  const t=TIRADAS[tiradaActiva];
+  if(selCards.length!==t.c){alert('Primero completá y revelá tu tirada.');return}
+  const btn=$('btn-download-tr-pptx');
+  const orig=btn.textContent;btn.textContent='⏳ Generando presentación...';btn.disabled=true;
+  try{
+    const PptxGenJS=await loadPptxLib();
+    await buildTiradaPptx(PptxGenJS,trBuildData());
+  }catch(e){
+    console.error('No se pudo generar el .pptx de la tirada:',e);
+    alert('No se pudo generar la presentación. Verifica tu conexión e intenta de nuevo.');
+  }finally{btn.textContent=orig;btn.disabled=false}
+}
+async function buildTiradaPptx(PptxGenJS,td){
+  const BG='07071A',DP='120A2E',GOLD='C9A84C',GL='E8D5A3',GD='7A6230',TS='9A8A6A';
+  const wordmark=await renderStyledTextPNG('TA · ROD',{font:'Playfair Display',weight:700,size:120,gradient:[[0,'#FBEECB'],[.42,'#CFAE5C'],[1,'#8A6A2E']],scale:2.5,letterSpacing:2});
+  const sub1=await renderStyledTextPNG(td.spreadName,{font:'Cormorant Garamond',weight:400,italic:true,size:40,color:'#E8D5A3',scale:2.5});
+  const cardTitles=await Promise.all(td.cards.map((c,i)=>renderStyledTextPNG((i+1)+'. '+c.pos,{font:'Playfair Display',weight:700,size:30,color:'#E8D5A3',scale:2.5})));
+  const closeTitle=await renderStyledTextPNG('Gracias por confiar en las cartas',{font:'Playfair Display',weight:700,italic:true,size:30,color:'#E8D5A3',scale:2.5});
+  const cardImgs=await Promise.all(td.cards.map(c=>urlToDataURL(c.imgUrl)));
+  const fechaTxt=new Date().toLocaleDateString('es-CR',{day:'numeric',month:'long',year:'numeric'});
+
+  const pptx=new PptxGenJS();
+  pptx.layout='LAYOUT_WIDE';
+  const PW=13.33,PH=7.5;
+  function bgSlide(){const s=pptx.addSlide();s.background={color:BG};return s}
+  function footerBrand(s){
+    s.addShape(pptx.ShapeType.line,{x:.7,y:PH-.55,w:PW-1.4,h:0,line:{color:GD,width:.75,transparency:40}});
+    s.addText('TA · ROD  ·  Tarot · Astrología · Chamanismo  ·  +(506) 8821-5669',{x:.7,y:PH-.48,w:PW-1.4,h:.3,fontFace:'Georgia',fontSize:9,color:TS,align:'center',italic:true});
+  }
+
+  // ── Portada ──
+  {
+    const s=bgSlide();
+    s.addShape(pptx.ShapeType.ellipse,{x:PW/2-4.2,y:-3.6,w:8.4,h:8.4,fill:{color:GD,transparency:88},line:{type:'none'}});
+    const w=3.4,h=w*(wordmark.h/wordmark.w);
+    s.addImage({data:wordmark.url,x:(PW-w)/2,y:2,w,h});
+    const sw=6.5,sh=sw*(sub1.h/sub1.w);
+    s.addImage({data:sub1.url,x:(PW-sw)/2,y:2+h+.2,w:sw,h:sh});
+    s.addText(td.spreadDesc,{x:1.4,y:2+h+.2+sh+.3,w:PW-2.8,h:.8,fontFace:'Georgia',fontSize:13,italic:true,color:TS,align:'center',valign:'top',lineSpacingMultiple:1.3});
+    s.addText(fechaTxt,{x:0,y:PH-1.15,w:PW,h:.4,fontFace:'Georgia',fontSize:11,color:TS,align:'center',charSpacing:1});
+  }
+
+  // ── Una diapositiva por carta ──
+  td.cards.forEach((c,i)=>{
+    const s=bgSlide();
+    const img=cardImgs[i];
+    if(img){
+      s.addImage({data:img,x:.9,y:1.15,w:3.1,h:5.35,sizing:{type:'contain',w:3.1,h:5.35}});
+      s.addShape(pptx.ShapeType.rect,{x:.9,y:1.15,w:3.1,h:5.35,fill:{type:'none'},line:{color:GD,width:1}});
+    }else{
+      s.addShape(pptx.ShapeType.rect,{x:.9,y:1.15,w:3.1,h:5.35,fill:{color:DP},line:{color:GD,width:1}});
+      s.addText(c.name,{x:1,y:3.4,w:2.9,h:.9,fontFace:'Georgia',fontSize:14,color:GOLD,align:'center',valign:'middle'});
+    }
+    const title=cardTitles[i];
+    const tw=6.4,th=tw*(title.h/title.w);
+    s.addImage({data:title.url,x:4.5,y:.85,w:tw,h:th});
+    s.addText(c.name+'  —  '+c.suitLabel,{x:4.5,y:.85+th+.15,w:PW-5,h:.4,fontFace:'Georgia',fontSize:14,bold:true,color:GL,align:'left'});
+    s.addText(c.keyword,{x:4.5,y:.85+th+.6,w:PW-5,h:.4,fontFace:'Georgia',fontSize:12.5,italic:true,color:GOLD,align:'left'});
+    s.addText(c.interp,{x:4.5,y:.85+th+1.1,w:PW-5,h:4,fontFace:'Georgia',fontSize:14,color:GL,align:'left',valign:'top',lineSpacingMultiple:1.35});
+    footerBrand(s);
+  });
+
+  // ── Cierre ──
+  {
+    const s=bgSlide();
+    const w=2.3,h=w*(wordmark.h/wordmark.w);
+    s.addImage({data:wordmark.url,x:(PW-w)/2,y:2.3,w,h});
+    const ctw=6.5,cth=ctw*(closeTitle.h/closeTitle.w);
+    s.addImage({data:closeTitle.url,x:(PW-ctw)/2,y:2.3+h+.4,w:ctw,h:cth});
+    s.addText('Tarot · Astrología · Chamanismo\nSan José, Costa Rica  ·  +(506) 8821-5669  ·  @tatitarotcr',{
+      x:0,y:2.3+h+.4+cth+.35,w:PW,h:.9,fontFace:'Georgia',fontSize:13,color:TS,align:'center',italic:true,lineSpacingMultiple:1.4
+    });
+  }
+
+  await pptx.writeFile({fileName:'TA-ROD_Tirada_'+td.spreadName.replace(/[^a-zA-Z0-9]+/g,'_')+'.pptx'});
 }
 
 async function downloadSectionDocx(sectionId){
