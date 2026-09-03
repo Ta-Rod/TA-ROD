@@ -1106,6 +1106,10 @@ footer{border-top:1px solid var(--br);padding:3.5rem 4rem;display:flex;align-ite
     <div class="carta-error" id="num-error"></div>
     <div class="carta-result" id="num-result">
       <div class="num-grid" id="num-grid"></div>
+      <div class="carta-wheel-controls" style="margin-top:1.4rem">
+        <button class="cwc-btn" id="btn-download-num-docx" onclick="downloadNumerologiaDocx()">⬇ Descargar (.docx)</button>
+        <button class="cwc-btn" id="btn-download-num-pptx" onclick="downloadNumerologiaPptx()">⬇ Descargar Presentación (.pptx)</button>
+      </div>
       <div class="back-row" style="margin-top:0;border-top:none;padding-top:0">
         <button class="info-cta" onclick="openModal('numerologia')">✦ Recibir mi Lectura Completa de Numerología ✦</button>
       </div>
@@ -3674,6 +3678,165 @@ async function buildCartaPptx(PptxGenJS,data){
   }
 
   await pptx.writeFile({fileName:'TA-ROD_Carta_Natal.pptx'});
+}
+
+// ── Descarga de Numerología como .docx / .pptx ──
+// Mismo patrón que la Carta Natal: se genera 100% en el navegador,
+// reutilizando las mismas librerías (docx/PptxGenJS) y helpers (portada
+// con tipografía real, colores de marca) ya cargados/definidos arriba.
+function numBuildData(nd){
+  const cards=[
+    {n:nd.lifePath,label:'Camino de Vida',frame:'La lección central que viniste a vivir en esta existencia'},
+    {n:nd.expression,label:'Número de Expresión',frame:'El talento natural que traés para manifestar en el mundo'},
+    {n:nd.soul,label:'Número del Alma',frame:'El deseo más profundo que mueve tu corazón, aunque no siempre lo digas en voz alta'},
+    {n:nd.personality,label:'Número de Personalidad',frame:'La primera impresión que proyectás ante los demás'},
+    {n:nd.birthday,label:'Número del Día',frame:'Un talento adicional, propio del día exacto en que naciste'}
+  ].map(c=>{const e=NUM_ESSENCE[c.n]||{kw:'',txt:''};return{...c,kw:e.kw,txt:e.txt,master:!!e.master}});
+  const year=new Date().getFullYear();
+  const py=numPersonalYear(nd.fecha,year);
+  const pyTxt=NUM_PERSONAL_YEAR[py]||'';
+  const[fy,fm,fd]=nd.fecha.split('-').map(Number);
+  const monthNames=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const fechaTxt=fd+' de '+monthNames[fm-1]+' de '+fy;
+  return{cards,year,py,pyTxt,fechaTxt};
+}
+async function downloadNumerologiaDocx(){
+  if(!numData){alert('Primero calcula tus números.');return}
+  const btn=$('btn-download-num-docx');
+  const orig=btn.textContent;btn.textContent='⏳ Generando documento...';btn.disabled=true;
+  try{
+    const docxLib=await loadDocxLib();
+    await buildNumerologiaWordDoc(docxLib,numData);
+  }catch(e){
+    console.error('No se pudo generar el .docx de numerología:',e);
+    alert('No se pudo generar el documento. Verifica tu conexión e intenta de nuevo.');
+  }finally{btn.textContent=orig;btn.disabled=false}
+}
+async function buildNumerologiaWordDoc(docxLib,nd){
+  const{Document,Packer,Paragraph,TextRun,HeadingLevel,AlignmentType,BorderStyle,ImageRun,Footer,PageNumber}=docxLib;
+  const d=numBuildData(nd);
+  const GOLD='9C7A2E';
+  function h(text){return new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:300,after:150},children:[new TextRun({text,bold:true,color:GOLD,font:'Georgia'})]})}
+  const wordmarkImg=await renderStyledTextPNG('TA · ROD',{font:'Playfair Display',weight:700,size:80,gradient:[[0,'#B8985A'],[.42,'#8A6A2E'],[1,'#5A4318']],scale:3,letterSpacing:1});
+  const wordmarkBuf=await dataURLToArrayBuffer(wordmarkImg.url);
+  const subtitleImg=await renderStyledTextPNG('Numerología',{font:'Cormorant Garamond',weight:400,italic:true,size:34,color:'#5A4318',scale:3});
+  const subtitleBuf=await dataURLToArrayBuffer(subtitleImg.url);
+  const doc=new Document({
+    sections:[{
+      properties:{},
+      footers:{
+        default:new Footer({children:[
+          new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:120},border:{top:{color:'CCCCCC',space:8,style:BorderStyle.SINGLE,size:6}},children:[
+            new TextRun({text:'✦ TA-ROD · Tarot · Astrología · Chamanismo · +(506) 8821-5669 · ',italics:true,color:'888888',size:16,font:'Georgia'}),
+            new TextRun({children:[PageNumber.CURRENT],italics:true,color:'888888',size:16,font:'Georgia'})
+          ]})
+        ]})
+      },
+      children:[
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:60},children:[new ImageRun({type:'png',data:wordmarkBuf,transformation:{width:Math.round(70*wordmarkImg.w/wordmarkImg.h),height:70}})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:100},children:[new ImageRun({type:'png',data:subtitleBuf,transformation:{width:Math.round(38*subtitleImg.w/subtitleImg.h),height:38}})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:300},children:[new TextRun({text:'Preparada para '+nd.nombre+'  ·  Nacimiento: '+d.fechaTxt,italics:true,size:22,color:GOLD,font:'Georgia'})]}),
+        ...d.cards.flatMap(c=>[
+          h((c.master?'✦ ':'')+c.label+': '+c.n),
+          new Paragraph({spacing:{after:60},children:[new TextRun({text:c.frame+'.',italics:true,font:'Georgia',size:20,color:'666666'})]}),
+          new Paragraph({spacing:{after:60},children:[new TextRun({text:c.kw,bold:true,font:'Georgia',size:20})]}),
+          new Paragraph({spacing:{after:300},children:[new TextRun({text:c.txt,font:'Georgia'})]})
+        ]),
+        h('Tu Año Personal '+d.year),
+        new Paragraph({spacing:{after:60},children:[new TextRun({text:'Número '+d.py,bold:true,font:'Georgia',size:24,color:GOLD})]}),
+        new Paragraph({spacing:{after:300},children:[new TextRun({text:d.pyTxt,font:'Georgia'})]}),
+        new Paragraph({children:[new TextRun({text:'Esta lectura es una guía de autoconocimiento y no reemplaza el acompañamiento de un/a numerólogo/a profesional.',italics:true,size:18,color:'888888',font:'Georgia'})]})
+      ]
+    }]
+  });
+  const blob=await Packer.toBlob(doc);
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='TA-ROD_Numerologia.docx';document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+async function downloadNumerologiaPptx(){
+  if(!numData){alert('Primero calcula tus números.');return}
+  const btn=$('btn-download-num-pptx');
+  const orig=btn.textContent;btn.textContent='⏳ Generando presentación...';btn.disabled=true;
+  try{
+    const PptxGenJS=await loadPptxLib();
+    await buildNumerologiaPptx(PptxGenJS,numData);
+  }catch(e){
+    console.error('No se pudo generar el .pptx de numerología:',e);
+    alert('No se pudo generar la presentación. Verifica tu conexión e intenta de nuevo.');
+  }finally{btn.textContent=orig;btn.disabled=false}
+}
+async function buildNumerologiaPptx(PptxGenJS,nd){
+  const d=numBuildData(nd);
+  const BG='07071A',DP='120A2E',GOLD='C9A84C',GL='E8D5A3',GD='7A6230',TS='9A8A6A';
+  const wordmark=await renderStyledTextPNG('TA · ROD',{font:'Playfair Display',weight:700,size:120,gradient:[[0,'#FBEECB'],[.42,'#CFAE5C'],[1,'#8A6A2E']],scale:2.5,letterSpacing:2});
+  const sub1=await renderStyledTextPNG('Numerología',{font:'Cormorant Garamond',weight:400,italic:true,size:46,color:'#E8D5A3',scale:2.5});
+  const cardTitles=await Promise.all(d.cards.map(c=>renderStyledTextPNG(c.label,{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5})));
+  const pyTitle=await renderStyledTextPNG('Tu Año Personal '+d.year,{font:'Playfair Display',weight:700,size:32,color:'#E8D5A3',scale:2.5});
+  const closeTitle=await renderStyledTextPNG('Gracias por confiar en los números',{font:'Playfair Display',weight:700,italic:true,size:30,color:'#E8D5A3',scale:2.5});
+
+  const pptx=new PptxGenJS();
+  pptx.layout='LAYOUT_WIDE';
+  const PW=13.33,PH=7.5;
+  function bgSlide(){const s=pptx.addSlide();s.background={color:BG};return s}
+  function footerBrand(s){
+    s.addShape(pptx.ShapeType.line,{x:.7,y:PH-.55,w:PW-1.4,h:0,line:{color:GD,width:.75,transparency:40}});
+    s.addText('TA · ROD  ·  Tarot · Astrología · Chamanismo  ·  +(506) 8821-5669',{x:.7,y:PH-.48,w:PW-1.4,h:.3,fontFace:'Georgia',fontSize:9,color:TS,align:'center',italic:true});
+  }
+
+  // ── Portada ──
+  {
+    const s=bgSlide();
+    s.addShape(pptx.ShapeType.ellipse,{x:PW/2-4.2,y:-3.6,w:8.4,h:8.4,fill:{color:GD,transparency:88},line:{type:'none'}});
+    const w=3.4,h=w*(wordmark.h/wordmark.w);
+    s.addImage({data:wordmark.url,x:(PW-w)/2,y:2.15,w,h});
+    const w2=2.3,h2=w2*(sub1.h/sub1.w);
+    s.addImage({data:sub1.url,x:(PW-w2)/2,y:2.15+h+.15,w:w2,h:h2});
+    s.addText('Preparada para '+nd.nombre,{x:0,y:2.15+h+.15+h2+.5,w:PW,h:.45,fontFace:'Georgia',fontSize:20,italic:true,color:GOLD,align:'center'});
+    s.addText('Nacimiento: '+d.fechaTxt,{x:.8,y:2.15+h+.15+h2+1.05,w:PW-1.6,h:.4,fontFace:'Georgia',fontSize:13,color:TS,align:'center',charSpacing:1});
+    s.addText('✦',{x:0,y:PH-1.15,w:PW,h:.4,fontFace:'Georgia',fontSize:16,color:GOLD,align:'center'});
+  }
+
+  // ── Una diapositiva por número ──
+  d.cards.forEach((c,i)=>{
+    const s=bgSlide();
+    s.addShape(pptx.ShapeType.ellipse,{x:-2.2,y:PH/2-2.6,w:5.2,h:5.2,fill:{color:GD,transparency:90},line:{type:'none'}});
+    s.addShape(pptx.ShapeType.ellipse,{x:.75,y:PH/2-1.1,w:2.2,h:2.2,fill:{color:DP},line:{color:c.master?GOLD:GD,width:c.master?2:1}});
+    s.addText(String(c.n),{x:.75,y:PH/2-1.1,w:2.2,h:2.2,fontFace:'Georgia',fontSize:56,bold:true,color:GOLD,align:'center',valign:'middle'});
+    const title=cardTitles[i];
+    const tw=6.4,th=tw*(title.h/title.w);
+    s.addImage({data:title.url,x:3.4,y:.85,w:tw,h:th});
+    if(c.master)s.addText('✦ NÚMERO MAESTRO ✦',{x:3.4,y:.85+th+.05,w:6.4,h:.35,fontFace:'Georgia',fontSize:10,color:GOLD,align:'left',charSpacing:2});
+    s.addText(c.frame+'.',{x:3.4,y:.85+th+(c.master?.45:.15),w:PW-3.8,h:.5,fontFace:'Georgia',fontSize:12.5,italic:true,color:TS,align:'left',valign:'top'});
+    s.addText(c.kw,{x:3.4,y:.85+th+(c.master?1:.7),w:PW-3.8,h:.4,fontFace:'Georgia',fontSize:13,bold:true,color:GL,align:'left'});
+    s.addText(c.txt,{x:3.4,y:.85+th+(c.master?1.45:1.15),w:PW-3.8,h:3.5,fontFace:'Georgia',fontSize:14,color:GL,align:'left',valign:'top',lineSpacingMultiple:1.35});
+    footerBrand(s);
+  });
+
+  // ── Año Personal ──
+  {
+    const s=bgSlide();
+    const tw=4.2,th=tw*(pyTitle.h/pyTitle.w);
+    s.addImage({data:pyTitle.url,x:(PW-tw)/2,y:.7,w:tw,h:th});
+    s.addShape(pptx.ShapeType.ellipse,{x:PW/2-1.1,y:.7+th+.3,w:2.2,h:2.2,fill:{color:DP},line:{color:GOLD,width:1.5}});
+    s.addText(String(d.py),{x:PW/2-1.1,y:.7+th+.3,w:2.2,h:2.2,fontFace:'Georgia',fontSize:56,bold:true,color:GOLD,align:'center',valign:'middle'});
+    s.addText(d.pyTxt,{x:1.6,y:.7+th+2.75,w:PW-3.2,h:1.5,fontFace:'Georgia',fontSize:14,color:GL,align:'center',valign:'top',lineSpacingMultiple:1.35});
+    footerBrand(s);
+  }
+
+  // ── Cierre ──
+  {
+    const s=bgSlide();
+    const w=2.3,h=w*(wordmark.h/wordmark.w);
+    s.addImage({data:wordmark.url,x:(PW-w)/2,y:2.3,w,h});
+    const ctw=6.5,cth=ctw*(closeTitle.h/closeTitle.w);
+    s.addImage({data:closeTitle.url,x:(PW-ctw)/2,y:2.3+h+.4,w:ctw,h:cth});
+    s.addText('Tarot · Astrología · Chamanismo\nSan José, Costa Rica  ·  +(506) 8821-5669  ·  @tatitarotcr',{
+      x:0,y:2.3+h+.4+cth+.35,w:PW,h:.9,fontFace:'Georgia',fontSize:13,color:TS,align:'center',italic:true,lineSpacingMultiple:1.4
+    });
+  }
+
+  await pptx.writeFile({fileName:'TA-ROD_Numerologia.pptx'});
 }
 
 async function downloadSectionDocx(sectionId){
