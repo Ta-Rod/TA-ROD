@@ -3015,6 +3015,48 @@ function cartaWheelPNG(positions,houses,scale){
   drawCartaWheelPro(positions,houses,off,scale||4);
   return off.toDataURL('image/png');
 }
+// Arma toda la data de la "Lectura de Carta Natal" (la misma que ya calcula
+// renderNatalReading para la página) en un solo objeto plano, para que tanto
+// el .docx como el .pptx puedan reutilizarla sin duplicar los cálculos.
+function buildNatalReadingData(positions,houses){
+  const sunSign=nrSignName(positions.sun),moonSign=nrSignName(positions.moon),ascSign=nrSignName(positions.asc);
+  const stats=nrElementModalityStats(positions);
+  const stelliums=nrStelliums(positions);
+  const ruler=nrChartRuler(positions);
+  const nodes=nrNodeHouses(positions,houses);
+  const hemis=nrHemispheres(positions);
+  const aspects=calcAspects(positions);
+  const elemDom=Object.keys(stats.elemPct).reduce((a,b)=>stats.elemPct[a]>=stats.elemPct[b]?a:b);
+  const modeDom=Object.keys(stats.modePct).reduce((a,b)=>stats.modePct[a]>=stats.modePct[b]?a:b);
+  const sunTxt=(PLANET_TIPS_MAP['☉']&&PLANET_TIPS_MAP['☉'][sunSign])||getPlanetTipFull('☉',sunSign);
+  const moonTxt=(PLANET_TIPS_MAP['☽']&&PLANET_TIPS_MAP['☽'][moonSign])||getPlanetTipFull('☽',moonSign);
+  const ascTxt=ASC_SIGN_TEXT[ascSign]||'';
+  const sameSign=sunSign===moonSign&&moonSign===ascSign;
+  const aspectRows=aspects.map(a=>({
+    n1:PLANET_NAME_BY_KEY[a.k1]||a.k1,s1:PLANET_SYM_BY_KEY[a.k1]||'',
+    n2:PLANET_NAME_BY_KEY[a.k2]||a.k2,s2:PLANET_SYM_BY_KEY[a.k2]||'',
+    aspName:a.asp.name,aspSym:ASPECT_SYM[a.asp.name]||'',
+    orbe:Math.abs(a.diff-a.asp.angle).toFixed(1)
+  }));
+  const stelliumRows=stelliums.map(st=>({
+    house:st.house,
+    names:st.planets.map(k=>PLANET_SYM_BY_KEY[k]+' '+PLANET_NAME_BY_KEY[k]).join(', '),
+    texto:'La Casa '+st.house+' abarca '+HOUSE_MEANINGS[st.house-1]+'.'
+  }));
+  const rulerInfo=ruler.rulerHouse?{
+    ascSign:ruler.ascSign,rulerName:PLANET_NAME_BY_KEY[ruler.rulerKey]||ruler.rulerKey,rulerHouse:ruler.rulerHouse,
+    naturalSign:NATURAL_SIGN_HOUSE[ruler.rulerHouse-1],
+    texto:'Con el regente de tu carta en la Casa '+ruler.rulerHouse+', '+RULER_HOUSE_TEXT[ruler.rulerHouse-1],
+    naturalTexto:'Esta casa se asocia naturalmente con '+NATURAL_SIGN_HOUSE[ruler.rulerHouse-1]+', lo que añade '+SIGN_KEYWORD_TEXT[NATURAL_SIGN_HOUSE[ruler.rulerHouse-1]]
+  }:null;
+  const vertDom=hemis.total&&hemis.north>=hemis.south?'north':'south';
+  const horizDom=hemis.total&&hemis.east>=hemis.west?'east':'west';
+  return{sunSign,moonSign,ascSign,sunTxt,moonTxt,ascTxt,sameSign,stats,elemDom,modeDom,
+    nodes,nodesTxt:{nn:'Tu camino hacia el crecimiento '+NORTH_NODE_TEXT[nodes.nnHouse-1],sn:'Tu patrón kármico '+SOUTH_NODE_TEXT[nodes.snHouse-1]},
+    aspectRows,stelliumRows,rulerInfo,hemis,vertDom,horizDom,
+    elemDomTxt:ELEMENT_NARRATIVE[elemDom],modeDomTxt:MODALITY_NARRATIVE[modeDom],
+    hemiTxt:hemis.total?{horiz:HEMI_TEXT[horizDom],vert:HEMI_TEXT[vertDom]}:null};
+}
 // Dibuja texto con las tipografías reales del sitio (Playfair Display /
 // Cormorant Garamond, ya cargadas por la página vía Google Fonts) sobre un
 // canvas transparente en alta resolución, para poder insertarlo como imagen
@@ -3089,6 +3131,26 @@ function elementosDonutPNG(elemCount,scale){
   });
   return cv.toDataURL('image/png');
 }
+// Gráfico de barras horizontales genérico (usado para "Las 3 Modalidades"
+// en el .pptx) — items: [{label,pct,col}], en alta resolución.
+function pctBarsPNG(items,scale){
+  scale=scale||3;
+  const W=760,rowH=64,padTop=10,H=padTop*2+rowH*items.length;
+  const cv=document.createElement('canvas');cv.width=W*scale;cv.height=H*scale;
+  const ctx=cv.getContext('2d');ctx.setTransform(scale,0,0,scale,0,0);
+  const labelW=190,barX=labelW+10,barW=W-labelW-90,barH=22;
+  items.forEach((it,i)=>{
+    const y=padTop+rowH*i+rowH/2;
+    ctx.font='600 18px Georgia, serif';ctx.fillStyle='#E8D5A3';ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText(it.label,0,y);
+    ctx.fillStyle='rgba(201,168,76,.15)';ctx.fillRect(barX,y-barH/2,barW,barH);
+    const fillW=Math.max(6,barW*(it.pct/100));
+    ctx.fillStyle=it.col;ctx.fillRect(barX,y-barH/2,fillW,barH);
+    ctx.font='600 17px Georgia, serif';ctx.fillStyle='#C9A84C';ctx.textAlign='left';ctx.textBaseline='middle';
+    ctx.fillText(Math.round(it.pct*10)/10+'%',barX+barW+10,y);
+  });
+  return cv.toDataURL('image/png');
+}
 
 function toggleAspectLines(){
   cartaShowLines=!cartaShowLines;
@@ -3144,14 +3206,21 @@ async function buildCartaWordDoc(docxLib,data){
   });
   const housesArr=[];
   for(let i=1;i<=12;i++){if(houses[i]===undefined)continue;const pos=degToSignPos(houses[i]);housesArr.push({num:'Casa '+i,sign:SIGN_NAMES[pos.signIdx],deg:pos.deg+'°'})}
-  const elemCount={fuego:0,tierra:0,aire:0,agua:0};
-  ['sun','moon','mercury','venus','mars','jupiter','saturn'].forEach(k=>{const lon=positions[k];if(lon===undefined)return;const sName=SIGN_NAMES[degToSignPos(lon).signIdx];const elem=SIGN_ELEM[sName];if(elem)elemCount[elem]++});
   const interps=[];
   PLANET_ORDER.slice(0,7).forEach(p=>{const lon=positions[p.key];if(lon===undefined)return;const pos=degToSignPos(lon);interps.push({titulo:p.sym+' '+p.name+' en '+SIGN_NAMES[pos.signIdx],texto:getPlanetTipFull(p.sym,SIGN_NAMES[pos.signIdx])})});
   const wheelImgBuf=await dataURLToArrayBuffer(cartaWheelPNG(positions,houses,4));
-  const elemMax=Math.max(1,...Object.values(elemCount));
-  function elemBar(v){const filled=Math.round((v/elemMax)*12);return '█'.repeat(filled)+'░'.repeat(12-filled)}
+  const nrd=buildNatalReadingData(positions,houses);
+  // Portada con la tipografía real del sitio (Playfair Display / Cormorant
+  // Garamond): igual que en el .pptx, se "queman" como imagen porque Word
+  // no puede usarlas si no están instaladas en la computadora de quien lo
+  // abre — el cuerpo del documento sigue siendo texto nativo editable.
+  const wordmarkImg=await renderStyledTextPNG('TA · ROD',{font:'Playfair Display',weight:700,size:80,gradient:[[0,'#B8985A'],[.42,'#8A6A2E'],[1,'#5A4318']],scale:3,letterSpacing:1});
+  const wordmarkBuf=await dataURLToArrayBuffer(wordmarkImg.url);
+  const subtitleImg=await renderStyledTextPNG('Carta Natal',{font:'Cormorant Garamond',weight:400,italic:true,size:34,color:'#5A4318',scale:3});
+  const subtitleBuf=await dataURLToArrayBuffer(subtitleImg.url);
+  function pctBar(pct){const filled=Math.round(pct/100*12);return '█'.repeat(filled)+'░'.repeat(12-filled)}
   const elemLabels={fuego:'🔥 Fuego',tierra:'🌿 Tierra',aire:'🌬 Aire',agua:'🌊 Agua'};
+  const modeLabels={cardinal:'🌱 Cardinal',fijo:'🗿 Fijo',mutable:'🌊 Mutable'};
 
   const GOLD='9C7A2E';
   function h(text){return new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:300,after:150},children:[new TextRun({text,bold:true,color:GOLD,font:'Georgia'})]})}
@@ -3182,28 +3251,90 @@ async function buildCartaWordDoc(docxLib,data){
         ]})
       },
       children:[
-        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:80},children:[new TextRun({text:'TA · ROD',bold:true,size:44,color:GOLD,font:'Georgia'})]}),
-        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:nameVal?100:300},children:[new TextRun({text:'Carta Natal',italics:true,size:28,color:'555555',font:'Georgia'})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:60},children:[new ImageRun({type:'png',data:wordmarkBuf,transformation:{width:Math.round(70*wordmarkImg.w/wordmarkImg.h),height:70}})]}),
+        new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:nameVal?100:300},children:[new ImageRun({type:'png',data:subtitleBuf,transformation:{width:Math.round(38*subtitleImg.w/subtitleImg.h),height:38}})]}),
         ...(nameVal?[new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:300},children:[new TextRun({text:'Preparada para '+nameVal,italics:true,size:22,color:GOLD,font:'Georgia'})]})]:[]),
         new Paragraph({spacing:{after:200},children:[new TextRun({text:'Fecha de nacimiento: ',bold:true,font:'Georgia'}),new TextRun({text:day+' de '+monthNames[month-1]+' de '+year+', '+String(hour||12).padStart(2,'0')+':'+String(minute||0).padStart(2,'0')+' hrs',font:'Georgia'})]}),
         new Paragraph({spacing:{after:300},children:[new TextRun({text:'Lugar de nacimiento: ',bold:true,font:'Georgia'}),new TextRun({text:geo.name,font:'Georgia'})]}),
         new Paragraph({alignment:AlignmentType.CENTER,spacing:{after:300},children:[new ImageRun({type:'png',data:wheelImgBuf,transformation:{width:380,height:380}})]}),
+
+        h('Tu Gran Tres: Sol · Luna · Ascendente'),
+        new Paragraph({spacing:{after:150},children:[new TextRun({text:'Tu "Gran Tres" está formado por tu signo solar, lunar y ascendente. El Sol es el núcleo de lo que eres — tus objetivos y tu sentido de identidad. La Luna es tu lado emocional — tus instintos y tu forma de reaccionar. El Ascendente es cómo te presentas al mundo y cómo te expresas en él.',font:'Georgia'})]}),
+        new Paragraph({spacing:{before:100,after:40},children:[new TextRun({text:'☉ Sol en '+nrd.sunSign,bold:true,color:GOLD,font:'Georgia'})]}),
+        new Paragraph({spacing:{after:150},children:[new TextRun({text:nrd.sunTxt,font:'Georgia'})]}),
+        new Paragraph({spacing:{before:100,after:40},children:[new TextRun({text:'⬆ Ascendente en '+nrd.ascSign,bold:true,color:GOLD,font:'Georgia'})]}),
+        new Paragraph({spacing:{after:150},children:[new TextRun({text:nrd.ascTxt,font:'Georgia'})]}),
+        new Paragraph({spacing:{before:100,after:40},children:[new TextRun({text:'☽ Luna en '+nrd.moonSign,bold:true,color:GOLD,font:'Georgia'})]}),
+        new Paragraph({spacing:{after:150},children:[new TextRun({text:nrd.moonTxt,font:'Georgia'})]}),
+        ...(nrd.sameSign?[new Paragraph({spacing:{after:300},children:[new TextRun({text:'Con tus tres pilares reunidos en '+nrd.sunSign+', esta energía se concentra e intensifica: es la nota dominante de toda tu carta.',italics:true,font:'Georgia'})]})]:[new Paragraph({spacing:{after:300}})]),
+
         h('Posiciones Planetarias'),
         tableFromRows(['Planeta','Signo','Grado','Casa'],planetsArr.map(p=>[p.sym+' '+p.name,p.sign,p.deg,p.house||'—'])),
         h('Casas (Sistema Placidus)'),
         tableFromRows(['Casa','Signo','Grado'],housesArr.map(hh=>[hh.num,hh.sign,hh.deg])),
-        h('Elementos'),
-        ...Object.entries(elemCount).map(([k,v])=>new Paragraph({spacing:{after:60},children:[
+
+        h('Los 4 Elementos'),
+        new Paragraph({spacing:{after:150},children:[new TextRun({text:'Tu funcionamiento interno está influido por el equilibrio de cuatro elementos: el Fuego enciende tus acciones, la Tierra te enraíza, el Aire inspira tu mente y el Agua guía tus emociones. (Calculado sobre tus 10 planetas + Ascendente + Medio Cielo.)',font:'Georgia'})]}),
+        ...Object.entries(nrd.stats.elemPct).map(([k,v])=>new Paragraph({spacing:{after:60},children:[
           new TextRun({text:elemLabels[k]+'  ',font:'Georgia',size:20}),
-          new TextRun({text:elemBar(v)+'  ',font:'Consolas',size:20,color:GOLD}),
-          new TextRun({text:String(v),font:'Georgia',size:20,bold:true})
+          new TextRun({text:pctBar(v)+'  ',font:'Consolas',size:20,color:GOLD}),
+          new TextRun({text:nrFmtPct(v),font:'Georgia',size:20,bold:true})
         ]})),
+        new Paragraph({spacing:{before:150,after:300},children:[new TextRun({text:nrd.elemDomTxt,font:'Georgia'})]}),
+
+        h('Las 3 Modalidades'),
+        new Paragraph({spacing:{after:150},children:[new TextRun({text:'Las modalidades — Cardinal, Fija y Mutable — revelan cómo inicias la acción, cómo mantienes la concentración y cómo te adaptas a los cambios de la vida.',font:'Georgia'})]}),
+        ...Object.entries(nrd.stats.modePct).map(([k,v])=>new Paragraph({spacing:{after:60},children:[
+          new TextRun({text:modeLabels[k]+'  ',font:'Georgia',size:20}),
+          new TextRun({text:pctBar(v)+'  ',font:'Consolas',size:20,color:GOLD}),
+          new TextRun({text:nrFmtPct(v),font:'Georgia',size:20,bold:true})
+        ]})),
+        new Paragraph({spacing:{before:150,after:300},children:[new TextRun({text:nrd.modeDomTxt,font:'Georgia'})]}),
+
+        h('Nodos Lunares'),
+        new Paragraph({spacing:{after:150},children:[new TextRun({text:'El Nodo Norte es tu destino, lo que te empuja hacia experiencias nuevas, tal vez intimidantes. El Nodo Sur es tu zona de confort kármico, aquello que debes soltar y superar. Tu Nodo Norte está en la Casa '+nrd.nodes.nnHouse+' y tu Nodo Sur está en la Casa '+nrd.nodes.snHouse+'.',font:'Georgia'})]}),
+        new Paragraph({spacing:{after:40},children:[new TextRun({text:'☊ Nodo Norte en Casa '+nrd.nodes.nnHouse,bold:true,color:GOLD,font:'Georgia'})]}),
+        new Paragraph({spacing:{after:150},children:[new TextRun({text:nrd.nodesTxt.nn,font:'Georgia'})]}),
+        new Paragraph({spacing:{after:40},children:[new TextRun({text:'Nodo Sur en Casa '+nrd.nodes.snHouse,bold:true,color:GOLD,font:'Georgia'})]}),
+        new Paragraph({spacing:{after:300},children:[new TextRun({text:nrd.nodesTxt.sn,font:'Georgia'})]}),
+
+        h('Aspectos'),
+        new Paragraph({spacing:{after:150},children:[new TextRun({text:'Los aspectos son las relaciones entre los planetas de tu carta: afectan quién eres, qué te pasa y cómo creces. Muestran los altibajos que hacen que tu vida sea especial.',font:'Georgia'})]}),
+        ...(nrd.aspectRows.length?[tableFromRows(['Planeta','Aspecto','Planeta','Orbe'],nrd.aspectRows.map(a=>[a.s1+' '+a.n1,a.aspSym+' '+a.aspName,a.s2+' '+a.n2,a.orbe+'°']))]:[new Paragraph({children:[new TextRun({text:'No se detectaron aspectos mayores dentro del orbe estándar.',font:'Georgia'})]})]),
         new Paragraph({spacing:{after:300}}),
+
+        h('Stellium'),
+        new Paragraph({spacing:{after:150},children:[new TextRun({text:'Cuando 3 o más planetas se agrupan en una misma casa, se forma un Stellium. Revela dónde se centra tu atención: tus puntos fuertes, cómo afrontas los retos y dónde brillas más.',font:'Georgia'})]}),
+        ...(nrd.stelliumRows.length?nrd.stelliumRows.flatMap(st=>[
+          new Paragraph({spacing:{before:100,after:40},children:[new TextRun({text:'Stellium en Casa '+st.house,bold:true,color:GOLD,font:'Georgia'})]}),
+          new Paragraph({spacing:{after:150},children:[new TextRun({text:st.names+' — '+st.texto,font:'Georgia'})]})
+        ]):[new Paragraph({spacing:{after:300},children:[new TextRun({text:'No se detectan agrupaciones de 3 o más planetas en una misma casa: tu energía está distribuida de forma más pareja entre las distintas áreas de tu vida.',font:'Georgia'})]})]),
+
+        ...(nrd.rulerInfo?[
+          h('El Regente de tu Carta'),
+          new Paragraph({spacing:{after:150},children:[new TextRun({text:'Con tu Ascendente en '+nrd.rulerInfo.ascSign+', el planeta que rige tu carta es '+nrd.rulerInfo.rulerName+', ubicado en tu Casa '+nrd.rulerInfo.rulerHouse+'.',font:'Georgia'})]}),
+          new Paragraph({spacing:{after:40},children:[new TextRun({text:'Regente en Casa '+nrd.rulerInfo.rulerHouse,bold:true,color:GOLD,font:'Georgia'})]}),
+          new Paragraph({spacing:{after:150},children:[new TextRun({text:nrd.rulerInfo.texto,font:'Georgia'})]}),
+          new Paragraph({spacing:{after:40},children:[new TextRun({text:'Correspondencia natural: '+nrd.rulerInfo.naturalSign,bold:true,color:GOLD,font:'Georgia'})]}),
+          new Paragraph({spacing:{after:300},children:[new TextRun({text:nrd.rulerInfo.naturalTexto,font:'Georgia'})]})
+        ]:[]),
+
+        ...(nrd.hemiTxt?[
+          h('Hemisferios'),
+          new Paragraph({spacing:{after:150},children:[new TextRun({text:'Tu carta se puede leer también en su conjunto: arriba (saliente), abajo (reservado), izquierda (independiente) y derecha (orientado a las relaciones).',font:'Georgia'})]}),
+          new Paragraph({spacing:{after:150},children:[new TextRun({text:nrd.hemiTxt.horiz,font:'Georgia'})]}),
+          new Paragraph({spacing:{after:300},children:[new TextRun({text:nrd.hemiTxt.vert,font:'Georgia'})]})
+        ]:[]),
+
         h('Interpretación Chamánica'),
         ...interps.flatMap(i=>[
           new Paragraph({spacing:{before:150,after:60},children:[new TextRun({text:i.titulo,bold:true,color:GOLD,font:'Georgia'})]}),
           new Paragraph({spacing:{after:180},children:[new TextRun({text:i.texto,font:'Georgia'})]})
-        ])
+        ]),
+
+        h('En Síntesis'),
+        new Paragraph({spacing:{after:150},children:[new TextRun({text:'Tu carta natal está calculada en tiempo real a partir de tu fecha, hora y lugar de nacimiento exactos — no es una plantilla genérica. Con tu Sol en '+nrd.sunSign+' y una energía predominantemente de '+nrd.elemDom+', tienes un mapa único con mucho que ofrecer.',font:'Georgia'})]}),
+        new Paragraph({children:[new TextRun({text:'Esta lectura es una guía de autoconocimiento y no reemplaza el acompañamiento de un/a astrólogo/a profesional.',italics:true,size:18,color:'888888',font:'Georgia'})]})
       ]
     }]
   });
@@ -3257,8 +3388,7 @@ async function buildCartaPptx(PptxGenJS,data){
   });
   const housesArr=[];
   for(let i=1;i<=12;i++){if(houses[i]===undefined)continue;const pos=degToSignPos(houses[i]);housesArr.push({num:'Casa '+i,sign:SIGN_NAMES[pos.signIdx],deg:pos.deg+'°'})}
-  const elemCount={fuego:0,tierra:0,aire:0,agua:0};
-  ['sun','moon','mercury','venus','mars','jupiter','saturn'].forEach(k=>{const lon=positions[k];if(lon===undefined)return;const sName=SIGN_NAMES[degToSignPos(lon).signIdx];const elem=SIGN_ELEM[sName];if(elem)elemCount[elem]++});
+  const nrd=buildNatalReadingData(positions,houses);
   const bigThree=['sun','moon','asc'].map(k=>{
     const lon=positions[k];if(lon===undefined)return null;
     const pos=degToSignPos(lon);
@@ -3276,13 +3406,26 @@ async function buildCartaPptx(PptxGenJS,data){
   // ── colores e imágenes compartidas ──
   const BG='07071A',DP='120A2E',GOLD='C9A84C',GL='E8D5A3',GD='7A6230',TS='9A8A6A';
   const wheelPng=cartaWheelPNG(positions,houses,4);
-  const donutPng=elementosDonutPNG(elemCount,3);
+  const donutPng=elementosDonutPNG(nrd.stats.elemCount,3);
+  const modalPng=pctBarsPNG([
+    {label:'🌱 Cardinal',pct:nrd.stats.modePct.cardinal,col:'#D9622B'},
+    {label:'🗿 Fijo',pct:nrd.stats.modePct.fijo,col:'#4F8FBF'},
+    {label:'🌊 Mutable',pct:nrd.stats.modePct.mutable,col:'#8A5FC2'}
+  ],3);
   const wordmark=await renderStyledTextPNG('TA · ROD',{font:'Playfair Display',weight:700,size:120,gradient:[[0,'#FBEECB'],[.42,'#CFAE5C'],[1,'#8A6A2E']],scale:2.5,letterSpacing:2});
   const sub1=await renderStyledTextPNG('Carta Natal',{font:'Cormorant Garamond',weight:400,italic:true,size:46,color:'#E8D5A3',scale:2.5});
+  const granTresTitle=await renderStyledTextPNG('Sol · Luna · Ascendente',{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5});
   const wheelTitle=await renderStyledTextPNG('Tu Mapa del Cielo',{font:'Playfair Display',weight:700,size:40,color:'#E8D5A3',scale:2.5});
   const posTitle=await renderStyledTextPNG('Posiciones Planetarias',{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5});
   const houseTitle=await renderStyledTextPNG('Las 12 Casas',{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5});
   const elemTitle=await renderStyledTextPNG('Balance Elemental',{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5});
+  const modalTitle=await renderStyledTextPNG('Las 3 Modalidades',{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5});
+  const nodesTitle=await renderStyledTextPNG('Nodos Lunares',{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5});
+  const aspectsTitle=await renderStyledTextPNG('Aspectos',{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5});
+  const stelliumTitle=await renderStyledTextPNG('Stellium',{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5});
+  const rulerTitle=await renderStyledTextPNG('El Regente de tu Carta',{font:'Playfair Display',weight:700,size:32,color:'#E8D5A3',scale:2.5});
+  const hemiTitle=await renderStyledTextPNG('Hemisferios',{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5});
+  const synthTitle=await renderStyledTextPNG('En Síntesis',{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5});
   const closeTitle=await renderStyledTextPNG('Gracias por confiar en las estrellas',{font:'Playfair Display',weight:700,italic:true,size:30,color:'#E8D5A3',scale:2.5});
   const spotTitles=await Promise.all(spotlights.map(s=>renderStyledTextPNG(s.sym+' '+s.name+' en '+s.sign,{font:'Playfair Display',weight:700,size:34,color:'#E8D5A3',scale:2.5})));
 
@@ -3331,6 +3474,32 @@ async function buildCartaPptx(PptxGenJS,data){
     s.addText(bt,{x:.6,y:6.75,w:PW-1.2,h:.4,fontFace:'Georgia',fontSize:12,color:GL,align:'center',italic:true});
   }
 
+  // ── 2b. Gran Tres ──
+  {
+    const s=bgSlide();
+    const tw=4.6,th=tw*(granTresTitle.h/granTresTitle.w);
+    s.addImage({data:granTresTitle.url,x:(PW-tw)/2,y:.5,w:tw,h:th});
+    s.addText('Tu "Gran Tres" está formado por tu signo solar, lunar y ascendente. El Sol es el núcleo de lo que eres. La Luna es tu lado emocional. El Ascendente es cómo te presentas al mundo.',
+      {x:.9,y:.5+th+.2,w:PW-1.8,h:.75,fontFace:'Georgia',fontSize:13,color:TS,align:'center',italic:true,valign:'top',lineSpacingMultiple:1.3});
+    const cardY=.5+th+1.15,cardH=1.55,gap=.25,cardW=(PW-1.8-gap*2)/3;
+    const cards=[
+      {sym:'☉',label:'Sol en '+nrd.sunSign,texto:nrd.sunTxt},
+      {sym:'⬆',label:'Ascendente en '+nrd.ascSign,texto:nrd.ascTxt},
+      {sym:'☽',label:'Luna en '+nrd.moonSign,texto:nrd.moonTxt}
+    ];
+    cards.forEach((c,i)=>{
+      const x=.9+i*(cardW+gap);
+      s.addShape(pptx.ShapeType.roundRect,{x,y:cardY,w:cardW,h:cardH,rectRadius:.08,fill:{color:DP},line:{color:GD,width:.75,transparency:40}});
+      s.addText(c.sym+'  '+c.label,{x:x+.18,y:cardY+.12,w:cardW-.36,h:.4,fontFace:'Georgia',fontSize:12.5,bold:true,color:GOLD,align:'left'});
+      s.addText(c.texto,{x:x+.18,y:cardY+.52,w:cardW-.36,h:cardH-.65,fontFace:'Georgia',fontSize:10,color:GL,align:'left',valign:'top',lineSpacingMultiple:1.25});
+    });
+    if(nrd.sameSign){
+      s.addText('Con tus tres pilares reunidos en '+nrd.sunSign+', esta energía se concentra e intensifica: es la nota dominante de toda tu carta.',
+        {x:.9,y:cardY+cardH+.25,w:PW-1.8,h:.5,fontFace:'Georgia',fontSize:11,italic:true,color:TS,align:'center',valign:'top'});
+    }
+    footerBrand(s);
+  }
+
   // ── 3. Posiciones planetarias (tabla) ──
   {
     const s=bgSlide();
@@ -3357,9 +3526,114 @@ async function buildCartaPptx(PptxGenJS,data){
   {
     const s=bgSlide();
     const tw=3.6,th=tw*(elemTitle.h/elemTitle.w);
-    s.addImage({data:elemTitle.url,x:(PW-tw)/2,y:.55,w:tw,h:th});
-    const dw=4.6,dh=dw*(420/520);
-    s.addImage({data:donutPng,x:(PW-dw)/2,y:1.5,w:dw,h:dh});
+    s.addImage({data:elemTitle.url,x:(PW-tw)/2,y:.5,w:tw,h:th});
+    const dw=4.3,dh=dw*(420/520);
+    s.addImage({data:donutPng,x:(PW-dw)/2,y:1.35,w:dw,h:dh});
+    s.addText(nrd.elemDomTxt,{x:1.1,y:1.35+dh+.15,w:PW-2.2,h:1,fontFace:'Georgia',fontSize:12.5,color:GL,align:'center',valign:'top',lineSpacingMultiple:1.3});
+    footerBrand(s);
+  }
+
+  // ── 5b. Modalidades ──
+  {
+    const s=bgSlide();
+    const tw=3.9,th=tw*(modalTitle.h/modalTitle.w);
+    s.addImage({data:modalTitle.url,x:(PW-tw)/2,y:.5,w:tw,h:th});
+    s.addText('Las modalidades — Cardinal, Fija y Mutable — revelan cómo inicias la acción, cómo mantienes la concentración y cómo te adaptas a los cambios de la vida.',
+      {x:1.3,y:.5+th+.15,w:PW-2.6,h:.7,fontFace:'Georgia',fontSize:12.5,color:TS,align:'center',italic:true,valign:'top',lineSpacingMultiple:1.3});
+    const mw=7.4,mh=mw*(3*64/760);
+    s.addImage({data:modalPng,x:(PW-mw)/2,y:.5+th+.95,w:mw,h:mh});
+    s.addText(nrd.modeDomTxt,{x:1.3,y:.5+th+.95+mh+.25,w:PW-2.6,h:1,fontFace:'Georgia',fontSize:12.5,color:GL,align:'center',valign:'top',lineSpacingMultiple:1.3});
+    footerBrand(s);
+  }
+
+  // ── 5c. Nodos Lunares ──
+  {
+    const s=bgSlide();
+    const tw=3.4,th=tw*(nodesTitle.h/nodesTitle.w);
+    s.addImage({data:nodesTitle.url,x:(PW-tw)/2,y:.5,w:tw,h:th});
+    s.addText('El Nodo Norte es tu destino, lo que te empuja hacia experiencias nuevas, tal vez intimidantes. El Nodo Sur es tu zona de confort kármico, aquello que debes soltar y superar.',
+      {x:1.1,y:.5+th+.2,w:PW-2.2,h:.7,fontFace:'Georgia',fontSize:12.5,color:TS,align:'center',italic:true,valign:'top',lineSpacingMultiple:1.3});
+    const cardY=.5+th+1.1,cardH=2.1,gap=.4,cardW=(PW-2.2-gap)/2;
+    const ncards=[
+      {sym:'☊',label:'Nodo Norte en Casa '+nrd.nodes.nnHouse,texto:nrd.nodesTxt.nn},
+      {sym:'',label:'Nodo Sur en Casa '+nrd.nodes.snHouse,texto:nrd.nodesTxt.sn}
+    ];
+    ncards.forEach((c,i)=>{
+      const x=1.1+i*(cardW+gap);
+      s.addShape(pptx.ShapeType.roundRect,{x,y:cardY,w:cardW,h:cardH,rectRadius:.08,fill:{color:DP},line:{color:GD,width:.75,transparency:40}});
+      s.addText((c.sym?c.sym+' ':'')+c.label,{x:x+.22,y:cardY+.18,w:cardW-.44,h:.5,fontFace:'Georgia',fontSize:14,bold:true,color:GOLD,align:'left'});
+      s.addText(c.texto,{x:x+.22,y:cardY+.7,w:cardW-.44,h:cardH-.9,fontFace:'Georgia',fontSize:12,color:GL,align:'left',valign:'top',lineSpacingMultiple:1.3});
+    });
+    footerBrand(s);
+  }
+
+  // ── 5d. Aspectos ──
+  if(nrd.aspectRows.length){
+    const s=bgSlide();
+    const tw=2.3,th=tw*(aspectsTitle.h/aspectsTitle.w);
+    s.addImage({data:aspectsTitle.url,x:.75,y:.5,w:tw,h:th});
+    const header=['Planeta','Aspecto','Planeta','Orbe'].map(t=>({text:t,options:{bold:true,color:BG,fill:{color:GOLD},fontFace:'Georgia',fontSize:11,align:'center'}}));
+    const rows=[header,...nrd.aspectRows.map((a,i)=>[a.s1+' '+a.n1,a.aspSym+' '+a.aspName,a.s2+' '+a.n2,a.orbe+'°'].map(t=>({text:t,options:{color:GL,fill:{color:i%2?DP:BG},fontFace:'Georgia',fontSize:10.5,align:'center'}})))];
+    s.addTable(rows,{x:.75,y:.5+th+.3,w:PW-1.5,h:5.6,colW:[3.3,(PW-1.5-3.3)/3,(PW-1.5-3.3)/3,(PW-1.5-3.3)/3],border:{type:'solid',color:GD,pt:.5},autoPage:true,autoPageLineWeight:0,newSlideStartY:1.1});
+    footerBrand(s);
+  }
+
+  // ── 5e. Stellium ──
+  {
+    const s=bgSlide();
+    const tw=2.1,th=tw*(stelliumTitle.h/stelliumTitle.w);
+    s.addImage({data:stelliumTitle.url,x:(PW-tw)/2,y:.5,w:tw,h:th});
+    s.addText('Cuando 3 o más planetas se agrupan en una misma casa, se forma un Stellium. Revela dónde se centra tu atención: tus puntos fuertes, cómo afrontas los retos y dónde brillas más.',
+      {x:1.1,y:.5+th+.2,w:PW-2.2,h:.7,fontFace:'Georgia',fontSize:12.5,color:TS,align:'center',italic:true,valign:'top',lineSpacingMultiple:1.3});
+    let sy=.5+th+1.05;
+    if(nrd.stelliumRows.length){
+      nrd.stelliumRows.slice(0,3).forEach(st=>{
+        const ch=1.15;
+        s.addShape(pptx.ShapeType.roundRect,{x:1.1,y:sy,w:PW-2.2,h:ch,rectRadius:.07,fill:{color:DP},line:{color:GD,width:.75,transparency:40}});
+        s.addText('Stellium en Casa '+st.house+'  —  '+st.names,{x:1.3,y:sy+.14,w:PW-2.6,h:.4,fontFace:'Georgia',fontSize:12.5,bold:true,color:GOLD,align:'left'});
+        s.addText(st.texto,{x:1.3,y:sy+.52,w:PW-2.6,h:ch-.6,fontFace:'Georgia',fontSize:11.5,color:GL,align:'left',valign:'top'});
+        sy+=ch+.25;
+      });
+    }else{
+      s.addText('No se detectan agrupaciones de 3 o más planetas en una misma casa: tu energía está distribuida de forma más pareja entre las distintas áreas de tu vida.',
+        {x:1.1,y:sy+.2,w:PW-2.2,h:1,fontFace:'Georgia',fontSize:13,color:GL,align:'center',valign:'top',lineSpacingMultiple:1.35});
+    }
+    footerBrand(s);
+  }
+
+  // ── 5f. El Regente de tu Carta ──
+  if(nrd.rulerInfo){
+    const s=bgSlide();
+    const tw=4.6,th=tw*(rulerTitle.h/rulerTitle.w);
+    s.addImage({data:rulerTitle.url,x:(PW-tw)/2,y:.5,w:tw,h:th});
+    s.addText('Con tu Ascendente en '+nrd.rulerInfo.ascSign+', el planeta que rige tu carta es '+nrd.rulerInfo.rulerName+', ubicado en tu Casa '+nrd.rulerInfo.rulerHouse+'.',
+      {x:1.1,y:.5+th+.2,w:PW-2.2,h:.6,fontFace:'Georgia',fontSize:13,color:TS,align:'center',italic:true,valign:'top',lineSpacingMultiple:1.3});
+    const cardY=.5+th+1,cardH=2.05,gap=.3,cardW=(PW-2.2-gap)/2;
+    [
+      {label:'Regente en Casa '+nrd.rulerInfo.rulerHouse,texto:nrd.rulerInfo.texto},
+      {label:'Correspondencia natural: '+nrd.rulerInfo.naturalSign,texto:nrd.rulerInfo.naturalTexto}
+    ].forEach((c,i)=>{
+      const x=1.1+i*(cardW+gap);
+      s.addShape(pptx.ShapeType.roundRect,{x,y:cardY,w:cardW,h:cardH,rectRadius:.08,fill:{color:DP},line:{color:GD,width:.75,transparency:40}});
+      s.addText(c.label,{x:x+.2,y:cardY+.16,w:cardW-.4,h:.5,fontFace:'Georgia',fontSize:12.5,bold:true,color:GOLD,align:'left'});
+      s.addText(c.texto,{x:x+.2,y:cardY+.62,w:cardW-.4,h:cardH-.8,fontFace:'Georgia',fontSize:11,color:GL,align:'left',valign:'top',lineSpacingMultiple:1.3});
+    });
+    footerBrand(s);
+  }
+
+  // ── 5g. Hemisferios ──
+  if(nrd.hemiTxt){
+    const s=bgSlide();
+    const tw=2.7,th=tw*(hemiTitle.h/hemiTitle.w);
+    s.addImage({data:hemiTitle.url,x:(PW-tw)/2,y:.5,w:tw,h:th});
+    s.addText('Tu carta se puede leer también en su conjunto: arriba (saliente), abajo (reservado), izquierda (independiente) y derecha (orientado a las relaciones).',
+      {x:1.1,y:.5+th+.2,w:PW-2.2,h:.7,fontFace:'Georgia',fontSize:12.5,color:TS,align:'center',italic:true,valign:'top',lineSpacingMultiple:1.3});
+    const cardY=.5+th+1.05,cardH=1.9,gap=.3,cardW=(PW-2.2-gap)/2;
+    [nrd.hemiTxt.horiz,nrd.hemiTxt.vert].forEach((texto,i)=>{
+      const x=1.1+i*(cardW+gap);
+      s.addShape(pptx.ShapeType.roundRect,{x,y:cardY,w:cardW,h:cardH,rectRadius:.08,fill:{color:DP},line:{color:GD,width:.75,transparency:40}});
+      s.addText(texto,{x:x+.22,y:cardY+.2,w:cardW-.44,h:cardH-.4,fontFace:'Georgia',fontSize:12,color:GL,align:'left',valign:'top',lineSpacingMultiple:1.3});
+    });
     footerBrand(s);
   }
 
@@ -3374,6 +3648,18 @@ async function buildCartaPptx(PptxGenJS,data){
     s.addText(sp.texto,{x:3,y:.85+th+.3,w:PW-3.6,h:5,fontFace:'Georgia',fontSize:15,color:GL,align:'left',valign:'top',lineSpacingMultiple:1.35});
     footerBrand(s);
   });
+
+  // ── 8b. En Síntesis ──
+  {
+    const s=bgSlide();
+    const tw=3.2,th=tw*(synthTitle.h/synthTitle.w);
+    s.addImage({data:synthTitle.url,x:(PW-tw)/2,y:2.1,w:tw,h:th});
+    const synthTxt='Tu carta natal está calculada en tiempo real a partir de tu fecha, hora y lugar de nacimiento exactos — no es una plantilla genérica. Con tu Sol en '+nrd.sunSign+' y una energía predominantemente de '+nrd.elemDom+', tienes un mapa único con mucho que ofrecer.';
+    s.addText(synthTxt,{x:1.6,y:2.1+th+.3,w:PW-3.2,h:1.3,fontFace:'Georgia',fontSize:15,color:GL,align:'center',valign:'top',lineSpacingMultiple:1.4});
+    s.addText('Esta lectura es una guía de autoconocimiento y no reemplaza el acompañamiento de un/a astrólogo/a profesional.',
+      {x:1.6,y:2.1+th+1.75,w:PW-3.2,h:.6,fontFace:'Georgia',fontSize:11,italic:true,color:TS,align:'center',valign:'top'});
+    footerBrand(s);
+  }
 
   // ── 9. Cierre ──
   {
